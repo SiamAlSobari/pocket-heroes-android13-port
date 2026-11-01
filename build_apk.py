@@ -19,7 +19,7 @@ APKSIGNER_BAT = os.path.join(SDK_BUILD_TOOLS, "apksigner.bat")
 UNSIGNED_APK = os.path.join(TOOLS_DIR, "unsigned.apk")
 ALIGNED_APK = os.path.join(TOOLS_DIR, "aligned.apk")
 KEYSTORE_PATH = os.path.join(TOOLS_DIR, "release.keystore")
-OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r2.apk")
+OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r3.apk")
 
 
 def ensure_keystore():
@@ -157,6 +157,21 @@ def patch_native_libs():
     so_data[0x005B9DBC:0x005B9DC0] = b"\x1e\xff\x2f\xe1"
     # MobClickCpp::applicationWillEnterForeground(void)
     so_data[0x005B9D70:0x005B9D74] = b"\x1e\xff\x2f\xe1"
+
+    # 5. Food / Stamina / Life Unlimited Patches:
+    # 5a. LifeMax(void) at 0x002BC4CC -> movs r0, #99; bx lr (63 20 70 47) [Thumb]
+    so_data[0x002BC4CC:0x002BC4D0] = b"\x63\x20\x70\x47"
+    # 5b. BalanceLifeStatus(int*, int*) at 0x002BC4E4 -> sets *pCurLife = 99, *pRemainTime = 0
+    # 10 b5 00 28 01 d0 63 22 02 60 00 29 01 d0 00 22 0a 60 10 bd [Thumb]
+    so_data[0x002BC4E4:0x002BC4F8] = bytes.fromhex("10b5002801d063220260002901d000220a6010bd")
+    # 5c. DecreaseLife(int) at 0x002BC6DC -> movs r0, #1; bx lr (01 20 70 47) [Thumb]
+    so_data[0x002BC6DC:0x002BC6E0] = b"\x01\x20\x70\x47"
+    # 5d. UIStoryLayer::onLevel at 0x00310E26 -> b 0x310e2c (01 e0) to skip DecreaseLife check [Thumb]
+    so_data[0x00310E26:0x00310E28] = b"\x01\xe0"
+    # 5e. UIStoryLayer::onLevel at 0x00310F7A -> b 0x31102c (57 e7) to bypass popBuyLife [Thumb]
+    so_data[0x00310F7A:0x00310F7C] = b"\x57\xe7"
+    # 5f. UIStoryLayer::onLife at 0x003109A0 -> bx lr (70 47) to ignore tapping food icon [Thumb]
+    so_data[0x003109A0:0x003109A2] = b"\x70\x47"
 
     # CRITICAL: Verify offset 0x006215B8 is untouched and holds "com/wwcd/util/AndroidUtil"
     assert so_data[0x006215B8:0x006215B8 + 25] == b"com/wwcd/util/AndroidUtil"

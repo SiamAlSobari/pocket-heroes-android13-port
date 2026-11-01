@@ -8,7 +8,7 @@ REPO_ROOT = r"C:\Koding\rea\pocket"
 DECOMPILED_DIR = os.path.join(REPO_ROOT, "pocket-heroes-decompiled")
 TOOLS_DIR = os.path.join(REPO_ROOT, "tools")
 KEYSTORE_PATH = os.path.join(TOOLS_DIR, "release.keystore")
-OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r2.apk")
+OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r3.apk")
 KEYTOOL_EXE = r"C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe"
 SDK_BUILD_TOOLS = r"C:\Users\Colorful\AppData\Local\Android\Sdk\build-tools\36.1.0"
 AAPT2_EXE = os.path.join(SDK_BUILD_TOOLS, "aapt2.exe")
@@ -82,6 +82,16 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
             self.assertEqual(data[0x005BA81C:0x005BA820], b"\x1e\xff\x2f\xe1")
             self.assertEqual(data[0x005B9DBC:0x005B9DC0], b"\x1e\xff\x2f\xe1")
             self.assertEqual(data[0x005B9D70:0x005B9D74], b"\x1e\xff\x2f\xe1")
+            # Food / Stamina / Life Unlimited Patches
+            self.assertEqual(data[0x002BC4CC:0x002BC4D0], b"\x63\x20\x70\x47")
+            self.assertEqual(
+                data[0x002BC4E4:0x002BC4F8],
+                bytes.fromhex("10b5002801d063220260002901d000220a6010bd"),
+            )
+            self.assertEqual(data[0x002BC6DC:0x002BC6E0], b"\x01\x20\x70\x47")
+            self.assertEqual(data[0x00310E26:0x00310E28], b"\x01\xe0")
+            self.assertEqual(data[0x00310F7A:0x00310F7C], b"\x57\xe7")
+            self.assertEqual(data[0x003109A0:0x003109A2], b"\x70\x47")
             # Crucial: 0x6215b8 must preserve "com/wwcd/util/AndroidUtil"
             self.assertEqual(data[0x006215B8:0x006215B8 + 25], b"com/wwcd/util/AndroidUtil")
 
@@ -199,6 +209,15 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
                     self.assertEqual(so_bytes[0x0035BBAC:0x0035BBAE], b"\x70\x47")
                     self.assertEqual(so_bytes[0x003614CC:0x003614CE], b"\x70\x47")
                     self.assertEqual(so_bytes[0x005B9C00:0x005B9C04], b"\x1e\xff\x2f\xe1")
+                    self.assertEqual(so_bytes[0x002BC4CC:0x002BC4D0], b"\x63\x20\x70\x47")
+                    self.assertEqual(
+                        so_bytes[0x002BC4E4:0x002BC4F8],
+                        bytes.fromhex("10b5002801d063220260002901d000220a6010bd"),
+                    )
+                    self.assertEqual(so_bytes[0x002BC6DC:0x002BC6E0], b"\x01\x20\x70\x47")
+                    self.assertEqual(so_bytes[0x00310E26:0x00310E28], b"\x01\xe0")
+                    self.assertEqual(so_bytes[0x00310F7A:0x00310F7C], b"\x57\xe7")
+                    self.assertEqual(so_bytes[0x003109A0:0x003109A2], b"\x70\x47")
                     self.assertEqual(so_bytes[0x006215B8:0x006215B8 + 25], b"com/wwcd/util/AndroidUtil")
 
         # Verify with aapt2 dump badging

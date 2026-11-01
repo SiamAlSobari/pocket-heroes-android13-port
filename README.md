@@ -11,8 +11,8 @@ A compatibility port and startup crash fix for the classic 2014 action RPG **Poc
 
 ## 📥 Download Latest APK
 
-* **Latest Release**: [Pocket Heroes v2.0.5 Release 2 (v2.0.5-r2)](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/tag/v2.0.5-r2)
-* **Direct APK Download**: [pocket-heroes-2-0-5-r2.apk](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/download/v2.0.5-r2/pocket-heroes-2-0-5-r2.apk)
+* **Latest Release**: [Pocket Heroes v2.0.5 Release 3 (v2.0.5-r3)](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/tag/v2.0.5-r3)
+* **Direct APK Download**: [pocket-heroes-2-0-5-r3.apk](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/download/v2.0.5-r3/pocket-heroes-2-0-5-r3.apk)
 
 ---
 
@@ -54,6 +54,13 @@ The original 2014 release suffered from multiple fatal crashes on modern Android
 * Neutralized native calls to Umeng Analytics (`MobClickCpp`) that attempted background network synchronization with discontinued telemetry endpoints.
 * Stubbed abandoned ad networks (Tapjoy, SponsorPay, InMobi, CrossPromotion) to prevent `NullPointerException`s.
 * Added null-safety guards in `DHGooglePaymentManager` and `IOUtil.delete()` to safely handle missing local directories and disabled billing services.
+
+### 6. Free & Unlimited Food/Stamina System (0 Cost Matches)
+* The original 2014 game enforced an energy timer ("Food/Life"), costing 1 food per stage entry and gating players behind wait timers or defunct microtransactions.
+* **Fix**:
+  * Neutralized `DecreaseLife(int)` in `libgame.so` to always return `true` without decrementing food.
+  * Patched `UIStoryLayer::onLevel` to bypass stamina depletion checks and eliminate the "Buy Food" pop-up.
+  * Configured `BalanceLifeStatus` and `LifeMax` to maintain a permanent 99/99 food pool with 0 recovery timer. Players can now enjoy non-stop dungeon runs without waiting.
 
 ---
 
