@@ -5,117 +5,117 @@
 [![Platform](https://img.shields.io/badge/Platform-Android%2011%20%7C%2012%20%7C%2013%20%7C%2014%20%7C%2015-orange.svg)](https://android.com)
 [![Architecture](https://img.shields.io/badge/ABI-armeabi--v7a-lightgrey.svg)](https://developer.android.com/ndk/guides/abis)
 
-Port kompatibilitas dan perbaikan startup crash untuk game klasik **Pocket Heroes v2.0.5** (`com.droidhang.ph`, rilis tahun 2014) agar dapat dipasang dan dimainkan dengan lancar di perangkat modern yang menjalankan **Android 11, 12, 13, 14, dan 15**.
+A compatibility port and startup crash fix for the classic 2014 action RPG **Pocket Heroes v2.0.5** (`com.droidhang.ph`), re-engineered to install and run smoothly on modern Android devices running **Android 11, 12, 13, 14, and 15**.
 
 ---
 
-## 📥 Download APK Terbaru
+## 📥 Download Latest APK
 
-* **Versi Rilis**: [Pocket Heroes v2.0.5 Release 2 (v2.0.5-r2)](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/tag/v2.0.5-r2)
-* **File Langsung**: [pocket-heroes-2-0-5-r2.apk](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/download/v2.0.5-r2/pocket-heroes-2-0-5-r2.apk)
-
----
-
-## ⚠️ Catatan Pengguna Android 14 & 15
-
-Saat pertama kali membuka game di Android 14 atau 15, sistem operasi Android akan memunculkan pop-up pemberitahuan:
-
-> **"Aplikasi ini tidak kompatibel dengan versi terbaru Android. Periksa update atau hubungi developer aplikasi."**
-
-**Hal ini wajar dan bukan error.** Pop-up tersebut adalah dialog bawaan sistem Android (`DeprecatedAbiDialog`) karena binary game berarsitektur 32-bit (`armeabi-v7a`).
-
-👉 **Cukup tekan tombol "Oke"**, dan game akan langsung masuk ke menu utama serta berjalan normal tanpa force-close.
+* **Latest Release**: [Pocket Heroes v2.0.5 Release 2 (v2.0.5-r2)](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/tag/v2.0.5-r2)
+* **Direct APK Download**: [pocket-heroes-2-0-5-r2.apk](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/download/v2.0.5-r2/pocket-heroes-2-0-5-r2.apk)
 
 ---
 
-## 🛠️ Ringkasan Perbaikan Teknis
+## ⚠️ Important Note for Android 14 & 15 Users
 
-Game asli tahun 2014 mengalami beberapa masalah fatal ketika dijalankan di Android versi baru. Repositori ini menerapkan serangkaian patch otomatis:
+When launching the game for the first time on Android 14 or 15, the OS will display a system notification dialog:
 
-### 1. Eliminasi Crash `FloatMath.ceil` (`NoSuchMethodError`)
-* Google telah menghapus class `android.util.FloatMath` secara permanen sejak Android 6.0 (API 23).
-* Pada file smali engine `Cocos2dxBitmap`, panggilan font measuring menggunakan `FloatMath.ceil(F)F` yang langsung memicu fatal exception saat game memuat teks font.
-* **Perbaikan**: Dialihkan ke method bridge `java.lang.Math.ceil(D)D` yang didukung penuh di semua runtime Android.
+> **"This app is not compatible with the latest version of Android. Check for updates, or contact the app's developer."**
 
-### 2. Guard OpenGL SurfaceView Lifecycle (`sNativeInitDone`)
-* Ketika dialog sistem Android 14/15 muncul, activity game kehilangan fokus dan langsung memicu event `onPause()`.
-* Pada engine bawaan, event ini memanggil fungsi native C++ sebelum thread render selesai menjalankan `nativeInit()`, yang menyebabkan crash pointer dereference (`SIGSEGV`).
-* **Perbaikan**: Ditambahkan guard statis `sNativeInitDone` di `Cocos2dxRenderer.smali` dan `BEUtil.smali` untuk menahan event render, input touch, dan lifecycle pause/resume sampai inisialisasi native benar-benar tuntas.
+**This is expected behavior and not an error.** This dialog is Android's built-in `DeprecatedAbiDialog` informing you that the application runs a 32-bit native binary (`armeabi-v7a`) on a 64-bit CPU architecture.
 
-### 3. Preservasi JNI String & Bypass Signature Assembly
-* Patch lawas sering kali merusak byte di offset `0x006215B8` pada `libgame.so` karena mengiranya sebagai MD5 sertifikat, padahal string tersebut adalah `com/wwcd/util/AndroidUtil`. Hal ini menyebabkan JNI `FindClass` gagal total saat startup.
-* **Perbaikan**: Menggunakan binary murni yang diekstrak langsung dari APK asli, lalu melakukan bypass verifikasi lisensi dan signature pada level instruksi mesin opcode Thumb `bx lr` (`70 47`) di fungsi `verify` dan `verifySignature`.
-
-### 4. Target SDK Optimal (`targetSdkVersion: 28`)
-* Menggunakan API 28 (Android 9 Pie) untuk melompati batas blokir instalasi minimum Android 14 (`minInstall >= 24`).
-* Menghindari crash `FLAG_IMMUTABLE` pada `PendingIntent` (wajib di API 31+) serta pembatasan Scoped Storage ketat (API 30+) yang tidak didukung oleh library bawaan tahun 2014.
-
-### 5. Netralisasi SDK & Analytics Lawas
-* Menonaktifkan pemanggilan native C++ Umeng Analytics (`MobClickCpp`) yang mencoba mengirim sinyal telemetri ke server offline.
-* Menonaktifkan SDK iklan mati (Tapjoy, SponsorPay, InMobi, CrossPromotion) agar tidak memicu `NullPointerException`.
-* Mengamankan Google Play In-App Billing (`DHGooglePaymentManager`) agar menampilkan dialog informatif saat toko dibuka, bukan crash.
+👉 **Simply tap "OK"**, and the game will proceed to the main title screen and run smoothly without any crashes.
 
 ---
 
-## 🧪 Pengujian Kompatibilitas Otomatis
+## 🛠️ Technical Fixes Breakdown
 
-Proyek ini dilengkapi dengan rangkaian pengujian otomatis (`pytest`) untuk menjamin integritas APK:
+The original 2014 release suffered from multiple fatal crashes on modern Android runtimes. This repository applies an automated pipeline of Smali and native binary patches to resolve each root cause:
+
+### 1. Eliminated `FloatMath.ceil` Crash (`NoSuchMethodError`)
+* Google completely removed `android.util.FloatMath` methods starting in Android 6.0 (API 23).
+* Cocos2d-x's `Cocos2dxBitmap` relied on `FloatMath.ceil(F)F` for text and font measurement calculations, which instantly threw an unhandled `NoSuchMethodError` on modern ART runtimes upon game startup.
+* **Fix**: Implemented a helper bridge method in Smali that routes calls to `java.lang.Math.ceil(D)D`, which is universally supported across all Java and Android runtime versions.
+
+### 2. Guarded GL SurfaceView Lifecycle (`sNativeInitDone`)
+* When the Android 14/15 system compatibility dialog pops up, the activity loses window focus and immediately triggers `onPause()`.
+* In the stock 2014 engine, this sent an event to the native C++ engine before the GL thread had completed `nativeInit()`, causing null-pointer dereferences (`SIGSEGV / SEGV_MAPERR`) inside `CCDirector`.
+* **Fix**: Introduced a static `sNativeInitDone` state guard in `Cocos2dxRenderer.smali` and `BEUtil.smali`. Render passes, touch inputs, and pause/resume calls are safely ignored until native C++ initialization has completely finished.
+
+### 3. Preserved JNI String & Applied Machine Opcode Signature Bypass
+* Earlier reverse-engineering attempts overwrote memory bytes at offset `0x006215B8` with keystore MD5 hashes under the assumption that it was a certificate hash location. In reality, offset `0x006215B8` stores the ASCII class descriptor string `"com/wwcd/util/AndroidUtil"`. Overwriting it caused JNI `FindClass` to fail immediately on startup.
+* **Fix**: Preserved the original pristine `libgame.so` and bypassed signature and license verification at the ARM/Thumb assembly level using `bx lr` opcodes (`70 47` for Thumb functions `verify` and `verifySignature`; `1e ff 2f e1` for ARM routines).
+
+### 4. Target SDK Optimization (`targetSdkVersion: 28`)
+* Configured `targetSdkVersion: 28` (Android 9 Pie) to satisfy Android 14+'s minimum install threshold (`targetSdk >= 24`).
+* Bypasses strict Android 10+ Scoped Storage restrictions and Android 12+ (API 31+) mandatory `FLAG_IMMUTABLE` PendingIntent crashes in legacy 2014 third-party libraries.
+
+### 5. Neutralized Defunct SDKs & Analytics
+* Neutralized native calls to Umeng Analytics (`MobClickCpp`) that attempted background network synchronization with discontinued telemetry endpoints.
+* Stubbed abandoned ad networks (Tapjoy, SponsorPay, InMobi, CrossPromotion) to prevent `NullPointerException`s.
+* Added null-safety guards in `DHGooglePaymentManager` and `IOUtil.delete()` to safely handle missing local directories and disabled billing services.
+
+---
+
+## 🧪 Automated Compatibility Testing
+
+This repository includes a 9-point automated test suite (`pytest`) to verify build integrity:
 
 ```bash
 pytest tests/test_apk_compatibility.py
 ```
 
-Rangkaian tes mencakup:
-1. Validasi struktur ELF native library terhadap flag terlarang `DT_TEXTREL`.
-2. Verifikasi byte opcode assembly pada titik patch `libgame.so`.
-3. Verifikasi ketiadaan class `Landroid/util/FloatMath;` di seluruh file smali.
-4. Pengecekan guard lifecycle di `Cocos2dxRenderer`.
-5. Validasi signature APK skema v1, v2, dan v3 menggunakan `apksigner`.
+The test suite validates:
+1. Absence of illegal `DT_TEXTREL` flags in ELF dynamic headers.
+2. Exact byte opcode replacements at all native patch offsets in `libgame.so`.
+3. Complete eradication of `Landroid/util/FloatMath;` from all Smali classes.
+4. Correct installation of the `sNativeInitDone` lifecycle guard.
+5. APK alignment and v1/v2/v3 signature validity via `apksigner`.
 
 ---
 
-## 🔨 Cara Build dari Source Code
+## 🔨 Building from Source
 
-### Prasyarat:
+### Prerequisites:
 * **Java Development Kit (JDK 17+)**
 * **Python 3.10+**
-* **Android SDK Build-Tools** (`zipalign` dan `apksigner`)
-* **Apktool** (disimpan di folder `tools/apktool.jar`)
+* **Android SDK Build-Tools** (`zipalign` and `apksigner`)
+* **Apktool** (placed in `tools/apktool.jar`)
 
-### Langkah Build:
-1. Clone repositori ini:
+### Build Steps:
+1. Clone this repository:
    ```bash
    git clone https://github.com/SiamAlSobari/pocket-heroes-android13-port.git
    cd pocket-heroes-android13-port
    ```
-2. Jalankan skrip build otomatis:
+2. Run the automated patch and build script:
    ```bash
    python build_apk.py
    ```
-3. File APK yang sudah ter-patch, ter-align, dan ter-sign akan dibuat di:
+3. The aligned, patched, and signed APK will be output to:
    ```
    pocket-heroes-2-0-5-r2.apk
    ```
 
 ---
 
-## 📂 Struktur Repositori
+## 📂 Repository Structure
 
 ```
-├── pocket-heroes-decompiled/    # Kode sumber hasil dekompilasi (smali, assets, xml)
-│   ├── AndroidManifest.xml     # Manifest yang telah disesuaikan
-│   ├── apktool.yml             # Konfigurasi target SDK
-│   ├── lib/                    # Native binaries (armeabi, armeabi-v7a)
-│   └── smali/                  # Bytecode Dalvik hasil patch
+├── pocket-heroes-decompiled/    # Decompiled Smali bytecode, assets, and AndroidManifest.xml
+│   ├── AndroidManifest.xml     # Patched application manifest
+│   ├── apktool.yml             # Apktool SDK configuration
+│   ├── lib/                    # Native shared libraries (armeabi, armeabi-v7a)
+│   └── smali/                  # Patched Dalvik bytecode
 ├── tests/
-│   └── test_apk_compatibility.py # Automated compatibility test suite
-├── tools/                      # Keystore dan tools pendukung build
-├── build_apk.py                # Skrip otomatis patching, compiling, dan signing
+│   └── test_apk_compatibility.py # Automated pytest compatibility verification suite
+├── tools/                      # Build keystore and utilities
+├── build_apk.py                # Automated decompilation patch and packaging pipeline
 └── README.md
 ```
 
 ---
 
-## ⚖️ Penafian (Disclaimer)
+## ⚖️ Disclaimer
 
-Proyek ini dibuat murni untuk tujuan **preservasi (arsip), kompatibilitas perangkat keras modern, edukasi, dan penelitian reverse engineering**. Seluruh aset game, grafis, suara, logika permainan, dan merek dagang adalah hak cipta milik pengembang aslinya (**Droidhang**).
+This repository is maintained strictly for **digital preservation, hardware compatibility research, and educational reverse engineering purposes**. All game assets, characters, artwork, audio, and trademarks remain the sole intellectual property of the original developer (**Droidhang**).
