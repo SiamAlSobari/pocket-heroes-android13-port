@@ -579,19 +579,7 @@
 .end method
 
 .method public static onRated()V
-    .locals 2
-
-    .prologue
-    .line 73
-    sget-object v0, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
-
-    new-instance v1, Lcom/hz/game/be/util/BEUtil$4;
-
-    invoke-direct {v1}, Lcom/hz/game/be/util/BEUtil$4;-><init>()V
-
-    invoke-virtual {v0, v1}, Landroid/opengl/GLSurfaceView;->queueEvent(Ljava/lang/Runnable;)V
-
-    .line 79
+    .locals 0
     return-void
 .end method
 
@@ -601,17 +589,23 @@
     .param p1, "glSurfaceView"    # Landroid/opengl/GLSurfaceView;
 
     .prologue
-    .line 173
-    sget-object v0, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
 
     if-nez v0, :cond_0
 
-    .line 174
-    sput-object p1, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
+    return-void
 
-    .line 176
     :cond_0
     sget-object v0, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
+
+    if-nez v0, :cond_1
+
+    sput-object p1, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
+
+    :cond_1
+    sget-object v0, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
+
+    if-eqz v0, :cond_2
 
     new-instance v1, Lcom/hz/game/be/util/BEUtil$10;
 
@@ -619,7 +613,7 @@
 
     invoke-virtual {v0, v1}, Landroid/opengl/GLSurfaceView;->queueEvent(Ljava/lang/Runnable;)V
 
-    .line 182
+    :cond_2
     return-void
 .end method
 

@@ -28,6 +28,23 @@
 
 
 # direct methods
+
+.method private static ceilFloat(F)F
+    .locals 2
+    .param p0, "val"    # F
+
+    .prologue
+    float-to-double v0, p0
+
+    invoke-static {v0, v1}, Ljava/lang/Math;->ceil(D)D
+
+    move-result-wide v0
+
+    double-to-float v0, v0
+
+    return v0
+.end method
+
 .method public constructor <init>()V
     .locals 0
 
@@ -120,7 +137,7 @@
 
     move-result v9
 
-    invoke-static {v9}, Landroid/util/FloatMath;->ceil(F)F
+    invoke-static {v9}, Lorg/cocos2dx/lib/Cocos2dxBitmap;->ceilFloat(F)F
 
     move-result v9
 
@@ -922,7 +939,7 @@
 
     move-result v6
 
-    invoke-static {v6}, Landroid/util/FloatMath;->ceil(F)F
+    invoke-static {v6}, Lorg/cocos2dx/lib/Cocos2dxBitmap;->ceilFloat(F)F
 
     move-result v6
 
@@ -1631,7 +1648,7 @@
     move-result v11
 
     .line 323
-    invoke-static {v11}, Landroid/util/FloatMath;->ceil(F)F
+    invoke-static {v11}, Lorg/cocos2dx/lib/Cocos2dxBitmap;->ceilFloat(F)F
 
     move-result v11
 

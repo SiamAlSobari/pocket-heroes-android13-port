@@ -41,11 +41,16 @@
     .locals 1
 
     .prologue
-    .line 179
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
     iget v0, p0, Lcom/hz/game/be/util/BEUtil$10;->val$value:I
 
     invoke-static {v0}, Lcom/hz/game/be/util/BEUtil;->nOnWindowFocusChanged(I)V
 
-    .line 180
     return-void
 .end method

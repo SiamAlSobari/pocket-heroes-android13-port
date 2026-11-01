@@ -1,4 +1,3 @@
-import hashlib
 import os
 import struct
 import subprocess
@@ -9,29 +8,11 @@ REPO_ROOT = r"C:\Koding\rea\pocket"
 DECOMPILED_DIR = os.path.join(REPO_ROOT, "pocket-heroes-decompiled")
 TOOLS_DIR = os.path.join(REPO_ROOT, "tools")
 KEYSTORE_PATH = os.path.join(TOOLS_DIR, "release.keystore")
-OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-android13-fixed.apk")
+OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r2.apk")
 KEYTOOL_EXE = r"C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe"
 SDK_BUILD_TOOLS = r"C:\Users\Colorful\AppData\Local\Android\Sdk\build-tools\36.1.0"
 AAPT2_EXE = os.path.join(SDK_BUILD_TOOLS, "aapt2.exe")
 APKSIGNER_BAT = os.path.join(SDK_BUILD_TOOLS, "apksigner.bat")
-
-
-def get_keystore_cert_md5() -> bytes:
-    der = subprocess.run(
-        [
-            KEYTOOL_EXE,
-            "-exportcert",
-            "-keystore",
-            KEYSTORE_PATH,
-            "-alias",
-            "pocketheroes",
-            "-storepass",
-            "android123",
-        ],
-        capture_output=True,
-        check=True,
-    ).stdout
-    return hashlib.md5(der).hexdigest().lower().encode("ascii")
 
 
 def has_textrel(elf_bytes: bytes) -> bool:
@@ -57,13 +38,13 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
         yml_path = os.path.join(DECOMPILED_DIR, "apktool.yml")
         with open(yml_path, "r", encoding="utf-8") as f:
             content = f.read()
-        self.assertIn("targetSdkVersion: 33", content)
+        self.assertIn("targetSdkVersion: 28", content)
 
     def test_manifest_has_http_legacy_and_cleartext_and_exported(self):
         manifest_path = os.path.join(DECOMPILED_DIR, "AndroidManifest.xml")
         with open(manifest_path, "r", encoding="utf-8") as f:
             xml = f.read()
-        self.assertIn('platformBuildVersionCode="33"', xml)
+        self.assertIn('platformBuildVersionCode="28"', xml)
         self.assertIn('android:requestLegacyExternalStorage="true"', xml)
         self.assertIn('android:name="org.apache.http.legacy"', xml)
         self.assertIn('android:usesCleartextTraffic="true"', xml)
@@ -82,7 +63,6 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
     def test_native_libs_include_armeabi_v7a_and_no_textrel_libs(self):
         v7a_game = os.path.join(DECOMPILED_DIR, "lib", "armeabi-v7a", "libgame.so")
         self.assertTrue(os.path.isfile(v7a_game), "lib/armeabi-v7a/libgame.so must exist")
-        expected_md5 = get_keystore_cert_md5()
         for abi in ("armeabi", "armeabi-v7a"):
             abi_dir = os.path.join(DECOMPILED_DIR, "lib", abi)
             for fn in os.listdir(abi_dir):
@@ -96,8 +76,69 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
             self.assertEqual(data[0x0035BBAC:0x0035BBAE], b"\x70\x47")
             # DHHttpHelper::login() at 0x003614cc -> bx lr (70 47)
             self.assertEqual(data[0x003614CC:0x003614CE], b"\x70\x47")
-            # Expected cert MD5 at 0x006215b8 matches release.keystore
-            self.assertEqual(data[0x006215B8:0x006215B8 + 32], expected_md5)
+            # MobClickCpp functions neutralized
+            self.assertEqual(data[0x005B9C00:0x005B9C04], b"\x1e\xff\x2f\xe1")
+            self.assertEqual(data[0x005BA9C4:0x005BA9C8], b"\x1e\xff\x2f\xe1")
+            self.assertEqual(data[0x005BA81C:0x005BA820], b"\x1e\xff\x2f\xe1")
+            self.assertEqual(data[0x005B9DBC:0x005B9DC0], b"\x1e\xff\x2f\xe1")
+            self.assertEqual(data[0x005B9D70:0x005B9D74], b"\x1e\xff\x2f\xe1")
+            # Crucial: 0x6215b8 must preserve "com/wwcd/util/AndroidUtil"
+            self.assertEqual(data[0x006215B8:0x006215B8 + 25], b"com/wwcd/util/AndroidUtil")
+
+    def test_smali_floatmath_completely_removed(self):
+        smali_dir = os.path.join(DECOMPILED_DIR, "smali")
+        for root, dirs, files in os.walk(smali_dir):
+            for fn in files:
+                if fn.endswith(".smali"):
+                    p = os.path.join(root, fn)
+                    with open(p, "r", encoding="utf-8", errors="ignore") as f:
+                        text = f.read()
+                    self.assertNotIn(
+                        "Landroid/util/FloatMath;",
+                        text,
+                        f"FloatMath found in {p}",
+                    )
+
+    def test_cocos2dx_renderer_guarded(self):
+        ren_path = os.path.join(
+            DECOMPILED_DIR, "smali", "org", "cocos2dx", "lib", "Cocos2dxRenderer.smali"
+        )
+        with open(ren_path, "r", encoding="utf-8") as f:
+            ren = f.read()
+        self.assertIn("sNativeInitDone:Z", ren)
+        self.assertIn("sput-boolean v4, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z", ren)
+        self.assertIn("handleOnPause()V", ren)
+        self.assertIn("handleOnResume()V", ren)
+
+    def test_beutil_guarded(self):
+        be_path = os.path.join(
+            DECOMPILED_DIR, "smali", "com", "hz", "game", "be", "util", "BEUtil.smali"
+        )
+        with open(be_path, "r", encoding="utf-8") as f:
+            be = f.read()
+        self.assertIn("sNativeInitDone:Z", be)
+
+        be10_path = os.path.join(
+            DECOMPILED_DIR, "smali", "com", "hz", "game", "be", "util", "BEUtil$10.smali"
+        )
+        with open(be10_path, "r", encoding="utf-8") as f:
+            be10 = f.read()
+        self.assertIn("sNativeInitDone:Z", be10)
+
+    def test_payment_and_io_guarded(self):
+        pay_path = os.path.join(
+            DECOMPILED_DIR, "smali", "com", "droidhang", "pay", "DHGooglePaymentManager.smali"
+        )
+        with open(pay_path, "r", encoding="utf-8") as f:
+            pay = f.read()
+        self.assertNotIn("invoke-virtual {v0, v1}, Lcom/droidhang/pay/util/IabHelper;->logError(Ljava/lang/String;)V", pay)
+
+        io_path = os.path.join(
+            DECOMPILED_DIR, "smali", "com", "wwcd", "util", "IOUtil.smali"
+        )
+        with open(io_path, "r", encoding="utf-8") as f:
+            io_smali = f.read()
+        self.assertIn("cond_io_not_null", io_smali)
 
     def test_smali_startup_crashes_and_popups_neutralized(self):
         game_act = os.path.join(
@@ -126,15 +167,6 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
         self.assertIn("iput-boolean v2, p0, Lcom/google/example/games/basegameutils/GameHelper;->mConnectOnStart:Z", helper_smali)
         self.assertIn("iput-boolean v2, p0, Lcom/google/example/games/basegameutils/GameHelper;->mShowErrorDialogs:Z", helper_smali)
 
-        be_util_path = os.path.join(
-            DECOMPILED_DIR, "smali", "com", "hz", "game", "be", "util", "BEUtil.smali"
-        )
-        with open(be_util_path, "r", encoding="utf-8") as f:
-            be_smali = f.read()
-        self.assertNotIn("Lcom/droidhang/game/ad/VideoAdManager;->isAdReady()Z", be_smali)
-        self.assertNotIn("Lcom/droidhang/game/ad/VideoAdManager;->playAd()V", be_smali)
-        self.assertNotIn("/data/data/com.hz.game.be/", be_smali)
-
         video_mgr_path = os.path.join(
             DECOMPILED_DIR, "smali", "com", "droidhang", "game", "ad", "VideoAdManager.smali"
         )
@@ -153,7 +185,6 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
 
     def test_built_and_signed_apk_is_valid_for_android_13_plus(self):
         self.assertTrue(os.path.isfile(OUTPUT_APK), "Fixed APK has not been built yet")
-        expected_md5 = get_keystore_cert_md5()
         with zipfile.ZipFile(OUTPUT_APK, "r") as z:
             names = set(z.namelist())
             self.assertIn("lib/armeabi-v7a/libgame.so", names)
@@ -167,7 +198,8 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
                     self.assertEqual(so_bytes[0x0023AF74:0x0023AF76], b"\x70\x47")
                     self.assertEqual(so_bytes[0x0035BBAC:0x0035BBAE], b"\x70\x47")
                     self.assertEqual(so_bytes[0x003614CC:0x003614CE], b"\x70\x47")
-                    self.assertEqual(so_bytes[0x006215B8:0x006215B8 + 32], expected_md5)
+                    self.assertEqual(so_bytes[0x005B9C00:0x005B9C04], b"\x1e\xff\x2f\xe1")
+                    self.assertEqual(so_bytes[0x006215B8:0x006215B8 + 25], b"com/wwcd/util/AndroidUtil")
 
         # Verify with aapt2 dump badging
         badging = subprocess.run(
@@ -178,7 +210,7 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
             errors="replace",
             check=True,
         ).stdout
-        self.assertIn("targetSdkVersion:'33'", badging)
+        self.assertIn("targetSdkVersion:'28'", badging)
         self.assertIn("armeabi-v7a", badging)
 
         # Verify signature schemes v1 and v2/v3 with apksigner

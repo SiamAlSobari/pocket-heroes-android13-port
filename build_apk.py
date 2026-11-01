@@ -3,8 +3,10 @@ import os
 import re
 import shutil
 import subprocess
+import zipfile
 
 REPO_ROOT = r"C:\Koding\rea\pocket"
+ORIGINAL_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5.apk")
 DECOMPILED_DIR = os.path.join(REPO_ROOT, "pocket-heroes-decompiled")
 TOOLS_DIR = os.path.join(REPO_ROOT, "tools")
 APKTOOL_JAR = os.path.join(TOOLS_DIR, "apktool.jar")
@@ -17,7 +19,7 @@ APKSIGNER_BAT = os.path.join(SDK_BUILD_TOOLS, "apksigner.bat")
 UNSIGNED_APK = os.path.join(TOOLS_DIR, "unsigned.apk")
 ALIGNED_APK = os.path.join(TOOLS_DIR, "aligned.apk")
 KEYSTORE_PATH = os.path.join(TOOLS_DIR, "release.keystore")
-OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-android13-fixed.apk")
+OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r2.apk")
 
 
 def ensure_keystore():
@@ -75,7 +77,8 @@ def patch_apktool_yml():
     yml_path = os.path.join(DECOMPILED_DIR, "apktool.yml")
     with open(yml_path, "r", encoding="utf-8") as f:
         text = f.read()
-    text = re.sub(r"targetSdkVersion:\s*\d+", "targetSdkVersion: 33", text)
+    # targetSdkVersion 28 avoids Android 10+ scoped storage restrictions and Android 12+ immutable pending intent crashes
+    text = re.sub(r"targetSdkVersion:\s*\d+", "targetSdkVersion: 28", text)
     with open(yml_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
 
@@ -85,8 +88,9 @@ def patch_manifest():
     with open(manifest_path, "r", encoding="utf-8") as f:
         xml = f.read().replace("\r\n", "\n")
 
-    xml = re.sub(r'platformBuildVersionCode="\d+"', 'platformBuildVersionCode="33"', xml)
-    xml = re.sub(r'platformBuildVersionName="[^"]+"', 'platformBuildVersionName="13"', xml)
+    xml = re.sub(r'platformBuildVersionCode="\d+"', 'platformBuildVersionCode="28"', xml)
+    xml = re.sub(r'platformBuildVersionName="[^"]+"', 'platformBuildVersionName="9"', xml)
+    xml = re.sub(r'android:targetSdkVersion="\d+"', 'android:targetSdkVersion="28"', xml)
 
     if 'android:requestLegacyExternalStorage="true"' not in xml:
         xml = xml.replace(
@@ -118,28 +122,47 @@ def patch_manifest():
 def patch_native_libs():
     armeabi_dir = os.path.join(DECOMPILED_DIR, "lib", "armeabi")
     v7a_dir = os.path.join(DECOMPILED_DIR, "lib", "armeabi-v7a")
+    os.makedirs(armeabi_dir, exist_ok=True)
     os.makedirs(v7a_dir, exist_ok=True)
 
     # Remove unused legacy libraries that contain DT_TEXTREL
     for bad_lib in ("libbspatch.so", "libgetuiext.so"):
-        p = os.path.join(armeabi_dir, bad_lib)
-        if os.path.exists(p):
-            os.remove(p)
+        for d in (armeabi_dir, v7a_dir):
+            p = os.path.join(d, bad_lib)
+            if os.path.exists(p):
+                os.remove(p)
 
-    src_game = os.path.join(armeabi_dir, "libgame.so")
-    with open(src_game, "rb") as f:
-        so_data = bytearray(f.read())
+    # Extract pristine original libgame.so from original APK to prevent cumulative patch corruption
+    with zipfile.ZipFile(ORIGINAL_APK, "r") as z:
+        clean_so = z.read("lib/armeabi/libgame.so")
 
-    # 1. Neutralize verify(void) at 0x0023AF74 -> bx lr (70 47)
+    assert hashlib.sha256(clean_so).hexdigest() == "baaeb697ed64c80c02b10445882983aa330d726732100f7706e5c1851cfd91d9"
+    so_data = bytearray(clean_so)
+
+    # 1. Neutralize verify(void) at 0x0023AF74 -> bx lr (70 47) [Thumb]
     so_data[0x0023AF74:0x0023AF76] = b"\x70\x47"
-    # 2. Neutralize AndroidUtil::verifySignature(void) at 0x0035BBAC -> bx lr (70 47)
+    # 2. Neutralize AndroidUtil::verifySignature(void) at 0x0035BBAC -> bx lr (70 47) [Thumb]
     so_data[0x0035BBAC:0x0035BBAE] = b"\x70\x47"
-    # 3. Neutralize DHHttpHelper::login(void) at 0x003614CC -> bx lr (70 47)
+    # 3. Neutralize DHHttpHelper::login(void) at 0x003614CC -> bx lr (70 47) [Thumb]
     so_data[0x003614CC:0x003614CE] = b"\x70\x47"
-    # 4. Update expected certificate MD5 at 0x006215B8 to match release.keystore
-    cert_md5 = get_keystore_cert_md5()
-    so_data[0x006215B8:0x006215B8 + 32] = cert_md5
 
+    # 4. Neutralize Umeng MobClickCpp crash-prone functions -> bx lr (1e ff 2f e1) [ARM]
+    # MobClickCpp::startWithAppkey(char const*, char const*)
+    so_data[0x005B9C00:0x005B9C04] = b"\x1e\xff\x2f\xe1"
+    # MobClickCpp::updateOnlineConfig(void)
+    so_data[0x005BA9C4:0x005BA9C8] = b"\x1e\xff\x2f\xe1"
+    # MobClickCpp::checkUpdate(void)
+    so_data[0x005BA81C:0x005BA820] = b"\x1e\xff\x2f\xe1"
+    # MobClickCpp::applicationDidEnterBackground(void)
+    so_data[0x005B9DBC:0x005B9DC0] = b"\x1e\xff\x2f\xe1"
+    # MobClickCpp::applicationWillEnterForeground(void)
+    so_data[0x005B9D70:0x005B9D74] = b"\x1e\xff\x2f\xe1"
+
+    # CRITICAL: Verify offset 0x006215B8 is untouched and holds "com/wwcd/util/AndroidUtil"
+    assert so_data[0x006215B8:0x006215B8 + 25] == b"com/wwcd/util/AndroidUtil"
+
+    # Write patched libgame.so to both armeabi and armeabi-v7a
+    src_game = os.path.join(armeabi_dir, "libgame.so")
     with open(src_game, "wb") as f:
         f.write(so_data)
 
@@ -158,7 +181,423 @@ def replace_smali_method(smali_text: str, method_header: str, new_body: str) -> 
 
 
 def patch_smali_files():
-    # 1. Patch GameActivity.smali
+    # -------------------------------------------------------------
+    # 1. Patch Cocos2dxBitmap.smali: Replace FloatMath.ceil with Math.ceil
+    # -------------------------------------------------------------
+    bitmap_path = os.path.join(
+        DECOMPILED_DIR, "smali", "org", "cocos2dx", "lib", "Cocos2dxBitmap.smali"
+    )
+    with open(bitmap_path, "r", encoding="utf-8") as f:
+        bm = f.read().replace("\r\n", "\n")
+
+    ceil_float_method = """
+.method private static ceilFloat(F)F
+    .locals 2
+    .param p0, "val"    # F
+
+    .prologue
+    float-to-double v0, p0
+
+    invoke-static {v0, v1}, Ljava/lang/Math;->ceil(D)D
+
+    move-result-wide v0
+
+    double-to-float v0, v0
+
+    return v0
+.end method
+"""
+    if "ceilFloat(F)F" not in bm:
+        # Insert ceilFloat right before direct methods or constructor
+        bm = bm.replace(".method public constructor <init>()V", ceil_float_method + "\n.method public constructor <init>()V")
+
+    # Replace all 3 calls to FloatMath;->ceil(F)F
+    bm = re.sub(
+        r"invoke-static\s*\{([^}]+)\},\s*Landroid/util/FloatMath;->ceil\(F\)F",
+        r"invoke-static {\1}, Lorg/cocos2dx/lib/Cocos2dxBitmap;->ceilFloat(F)F",
+        bm,
+    )
+    assert "Landroid/util/FloatMath;" not in bm, "FloatMath still remains in Cocos2dxBitmap.smali"
+
+    with open(bitmap_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(bm)
+
+    # -------------------------------------------------------------
+    # 2. Patch Cocos2dxRenderer.smali: Guard GL calls with sNativeInitDone
+    # -------------------------------------------------------------
+    renderer_path = os.path.join(
+        DECOMPILED_DIR, "smali", "org", "cocos2dx", "lib", "Cocos2dxRenderer.smali"
+    )
+    with open(renderer_path, "r", encoding="utf-8") as f:
+        ren = f.read().replace("\r\n", "\n")
+
+    # Add static field sNativeInitDone
+    if ".field public static sNativeInitDone:Z" not in ren:
+        ren = ren.replace(
+            ".field private static sAnimationInterval:J",
+            ".field private static sAnimationInterval:J\n\n.field public static sNativeInitDone:Z = false",
+        )
+
+    # In <clinit>, initialize sNativeInitDone = false
+    ren = ren.replace(
+        "sput-wide v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sAnimationInterval:J\n\n    return-void",
+        "sput-wide v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sAnimationInterval:J\n\n    const/4 v0, 0x0\n    sput-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z\n\n    return-void",
+    )
+
+    # In nativeStart, set sNativeInitDone = true right after nativeInit call
+    native_init_call = "invoke-static {p1, p2, v2, v3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeInit(IILandroid/content/Context;Landroid/opengl/GLSurfaceView;)V"
+    if "sput-boolean v4, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z" not in ren:
+        ren = ren.replace(
+            native_init_call,
+            native_init_call + "\n\n    const/4 v4, 0x1\n    sput-boolean v4, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z",
+        )
+
+    # Guard onDrawFrame
+    if "sget-boolean v4, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z" not in ren:
+        draw_frame_header = ".method public onDrawFrame(Ljavax/microedition/khronos/opengles/GL10;)V\n    .locals 8\n    .param p1, \"gl\"    # Ljavax/microedition/khronos/opengles/GL10;\n\n    .prologue"
+        draw_frame_guard = draw_frame_header + "\n    sget-boolean v4, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z\n    if-nez v4, :cond_native_ready\n    return-void\n    :cond_native_ready"
+        ren = ren.replace(draw_frame_header, draw_frame_guard)
+
+    # Guard handleOnPause
+    ren = replace_smali_method(
+        ren,
+        ".method public handleOnPause()V",
+        """    .locals 1
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    invoke-static {}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeOnPause()V
+
+    return-void""",
+    )
+
+    # Guard handleOnResume
+    ren = replace_smali_method(
+        ren,
+        ".method public handleOnResume()V",
+        """    .locals 1
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    invoke-static {}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeOnResume()V
+
+    return-void""",
+    )
+
+    # Guard handleKeyDown
+    ren = replace_smali_method(
+        ren,
+        ".method public handleKeyDown(I)V",
+        """    .locals 1
+    .param p1, "pKeyCode"    # I
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    invoke-static {p1}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeKeyDown(I)Z
+
+    return-void""",
+    )
+
+    # Guard handleActionDown
+    ren = replace_smali_method(
+        ren,
+        ".method public handleActionDown(IFF)V",
+        """    .locals 1
+    .param p1, "pID"    # I
+    .param p2, "pX"    # F
+    .param p3, "pY"    # F
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    invoke-static {p1, p2, p3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeTouchesBegin(IFF)V
+
+    return-void""",
+    )
+
+    # Guard handleActionUp
+    ren = replace_smali_method(
+        ren,
+        ".method public handleActionUp(IFF)V",
+        """    .locals 1
+    .param p1, "pID"    # I
+    .param p2, "pX"    # F
+    .param p3, "pY"    # F
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    invoke-static {p1, p2, p3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeTouchesEnd(IFF)V
+
+    return-void""",
+    )
+
+    # Guard handleActionMove
+    ren = replace_smali_method(
+        ren,
+        ".method public handleActionMove([I[F[F)V",
+        """    .locals 1
+    .param p1, "pIDs"    # [I
+    .param p2, "pXs"    # [F
+    .param p3, "pYs"    # [F
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    invoke-static {p1, p2, p3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeTouchesMove([I[F[F)V
+
+    return-void""",
+    )
+
+    # Guard handleActionCancel
+    ren = replace_smali_method(
+        ren,
+        ".method public handleActionCancel([I[F[F)V",
+        """    .locals 1
+    .param p1, "pIDs"    # [I
+    .param p2, "pXs"    # [F
+    .param p3, "pYs"    # [F
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    invoke-static {p1, p2, p3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeTouchesCancel([I[F[F)V
+
+    return-void""",
+    )
+
+    with open(renderer_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(ren)
+
+    # -------------------------------------------------------------
+    # 3. Patch BEUtil.smali and BEUtil$10.smali
+    # -------------------------------------------------------------
+    be_util_path = os.path.join(
+        DECOMPILED_DIR, "smali", "com", "hz", "game", "be", "util", "BEUtil.smali"
+    )
+    with open(be_util_path, "r", encoding="utf-8") as f:
+        be_smali = f.read().replace("\r\n", "\n")
+
+    be_smali = be_smali.replace("com.hz.game.be", "com.droidhang.ph")
+    be_smali = replace_smali_method(
+        be_smali,
+        ".method public static onRated()V",
+        "    .locals 0\n    return-void",
+    )
+    be_smali = replace_smali_method(
+        be_smali,
+        ".method public static isVideoAdAvailable()I",
+        "    .locals 1\n    const/4 v0, 0x0\n    return v0",
+    )
+    be_smali = replace_smali_method(
+        be_smali,
+        ".method public static playVideoAd()V",
+        "    .locals 0\n    return-void",
+    )
+    be_smali = replace_smali_method(
+        be_smali,
+        ".method public static openOfferWall()V",
+        "    .locals 0\n    return-void",
+    )
+    be_smali = replace_smali_method(
+        be_smali,
+        ".method public static onWindowFocusChanged(ILandroid/opengl/GLSurfaceView;)V",
+        """    .locals 2
+    .param p0, "value"    # I
+    .param p1, "glSurfaceView"    # Landroid/opengl/GLSurfaceView;
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    sget-object v0, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
+
+    if-nez v0, :cond_1
+
+    sput-object p1, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
+
+    :cond_1
+    sget-object v0, Lcom/hz/game/be/util/BEUtil;->_glSurfaceView:Landroid/opengl/GLSurfaceView;
+
+    if-eqz v0, :cond_2
+
+    new-instance v1, Lcom/hz/game/be/util/BEUtil$10;
+
+    invoke-direct {v1, p0}, Lcom/hz/game/be/util/BEUtil$10;-><init>(I)V
+
+    invoke-virtual {v0, v1}, Landroid/opengl/GLSurfaceView;->queueEvent(Ljava/lang/Runnable;)V
+
+    :cond_2
+    return-void""",
+    )
+    with open(be_util_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(be_smali)
+
+    be10_path = os.path.join(
+        DECOMPILED_DIR, "smali", "com", "hz", "game", "be", "util", "BEUtil$10.smali"
+    )
+    with open(be10_path, "r", encoding="utf-8") as f:
+        be10 = f.read().replace("\r\n", "\n")
+
+    be10 = replace_smali_method(
+        be10,
+        ".method public run()V",
+        """    .locals 1
+
+    .prologue
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
+    iget v0, p0, Lcom/hz/game/be/util/BEUtil$10;->val$value:I
+
+    invoke-static {v0}, Lcom/hz/game/be/util/BEUtil;->nOnWindowFocusChanged(I)V
+
+    return-void""",
+    )
+    with open(be10_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(be10)
+
+    # -------------------------------------------------------------
+    # 4. Patch DHGooglePaymentManager.smali
+    # -------------------------------------------------------------
+    pay_path = os.path.join(
+        DECOMPILED_DIR, "smali", "com", "droidhang", "pay", "DHGooglePaymentManager.smali"
+    )
+    with open(pay_path, "r", encoding="utf-8") as f:
+        pay = f.read().replace("\r\n", "\n")
+
+    pay = pay.replace(
+        "invoke-direct {p0}, Lcom/droidhang/pay/DHGooglePaymentManager;->initPurchase()V",
+        "const/4 v0, 0x0\n    iput-boolean v0, p0, Lcom/droidhang/pay/DHGooglePaymentManager;->supportPurchase:Z",
+    )
+    # Remove mHelper.logError in buyItemInMainThread
+    bad_log_error = """    :cond_0
+    iget-object v0, p0, Lcom/droidhang/pay/DHGooglePaymentManager;->mHelper:Lcom/droidhang/pay/util/IabHelper;
+
+    const-string v1, "supportPurchase false"
+
+    invoke-virtual {v0, v1}, Lcom/droidhang/pay/util/IabHelper;->logError(Ljava/lang/String;)V
+
+    .line 263
+    invoke-virtual {p0}, Lcom/droidhang/pay/DHGooglePaymentManager;->alertBillingNotSupport()V"""
+
+    good_log_error = """    :cond_0
+    invoke-virtual {p0}, Lcom/droidhang/pay/DHGooglePaymentManager;->alertBillingNotSupport()V"""
+    pay = pay.replace(bad_log_error, good_log_error)
+
+    # Guard handleActivityResult
+    pay = replace_smali_method(
+        pay,
+        ".method public handleActivityResult(IILandroid/content/Intent;)Z",
+        """    .locals 1
+    .param p1, "requestCode"    # I
+    .param p2, "resultCode"    # I
+    .param p3, "data"    # Landroid/content/Intent;
+
+    .prologue
+    iget-object v0, p0, Lcom/droidhang/pay/DHGooglePaymentManager;->mHelper:Lcom/droidhang/pay/util/IabHelper;
+
+    if-nez v0, :cond_0
+
+    const/4 v0, 0x0
+
+    return v0
+
+    :cond_0
+    invoke-virtual {v0, p1, p2, p3}, Lcom/droidhang/pay/util/IabHelper;->handleActivityResult(IILandroid/content/Intent;)Z
+
+    move-result v0
+
+    return v0""",
+    )
+    with open(pay_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(pay)
+
+    # -------------------------------------------------------------
+    # 5. Patch IOUtil.smali
+    # -------------------------------------------------------------
+    io_util_path = os.path.join(
+        DECOMPILED_DIR, "smali", "com", "wwcd", "util", "IOUtil.smali"
+    )
+    with open(io_util_path, "r", encoding="utf-8") as f:
+        io_smali = f.read().replace("\r\n", "\n")
+
+    bad_io_delete = """    invoke-virtual {p0}, Ljava/io/File;->listFiles()[Ljava/io/File;
+
+    move-result-object v1
+
+    .line 167
+    .local v1, "files":[Ljava/io/File;
+    array-length v3, v1"""
+
+    good_io_delete = """    invoke-virtual {p0}, Ljava/io/File;->listFiles()[Ljava/io/File;
+
+    move-result-object v1
+
+    if-nez v1, :cond_io_not_null
+
+    invoke-virtual {p0}, Ljava/io/File;->delete()Z
+
+    return-void
+
+    :cond_io_not_null
+    .line 167
+    .local v1, "files":[Ljava/io/File;
+    array-length v3, v1"""
+    io_smali = io_smali.replace(bad_io_delete, good_io_delete)
+
+    with open(io_util_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(io_smali)
+
+    # -------------------------------------------------------------
+    # 6. Patch GameActivity.smali
+    # -------------------------------------------------------------
     game_act_path = os.path.join(
         DECOMPILED_DIR, "smali", "com", "droidhang", "ph", "GameActivity.smali"
     )
@@ -186,35 +625,11 @@ def patch_smali_files():
     with open(game_act_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(ga)
 
-    # 2. Patch DHGooglePaymentManager.smali so init() marks supportPurchase=false safely offline
-    pay_path = os.path.join(
-        DECOMPILED_DIR,
-        "smali",
-        "com",
-        "droidhang",
-        "pay",
-        "DHGooglePaymentManager.smali",
-    )
-    with open(pay_path, "r", encoding="utf-8") as f:
-        pay = f.read().replace("\r\n", "\n")
-
-    pay = pay.replace(
-        "invoke-direct {p0}, Lcom/droidhang/pay/DHGooglePaymentManager;->initPurchase()V",
-        "const/4 v0, 0x0\n    iput-boolean v0, p0, Lcom/droidhang/pay/DHGooglePaymentManager;->supportPurchase:Z",
-    )
-    with open(pay_path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(pay)
-
-    # 3. Patch GameHelper.smali to disable auto Google Play Games sign-in & error dialogs on startup
+    # -------------------------------------------------------------
+    # 7. Patch GameHelper.smali
+    # -------------------------------------------------------------
     helper_path = os.path.join(
-        DECOMPILED_DIR,
-        "smali",
-        "com",
-        "google",
-        "example",
-        "games",
-        "basegameutils",
-        "GameHelper.smali",
+        DECOMPILED_DIR, "smali", "com", "google", "example", "games", "basegameutils", "GameHelper.smali"
     )
     with open(helper_path, "r", encoding="utf-8") as f:
         helper = f.read().replace("\r\n", "\n")
@@ -230,33 +645,9 @@ def patch_smali_files():
     with open(helper_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(helper)
 
-    # 4. Patch BEUtil.smali to avoid VideoAdManager / Tapjoy NPEs when called from JNI
-    be_util_path = os.path.join(
-        DECOMPILED_DIR, "smali", "com", "hz", "game", "be", "util", "BEUtil.smali"
-    )
-    with open(be_util_path, "r", encoding="utf-8") as f:
-        be_smali = f.read().replace("\r\n", "\n")
-
-    be_smali = be_smali.replace("com.hz.game.be", "com.droidhang.ph")
-    be_smali = replace_smali_method(
-        be_smali,
-        ".method public static isVideoAdAvailable()I",
-        "    .locals 1\n    const/4 v0, 0x0\n    return v0",
-    )
-    be_smali = replace_smali_method(
-        be_smali,
-        ".method public static playVideoAd()V",
-        "    .locals 0\n    return-void",
-    )
-    be_smali = replace_smali_method(
-        be_smali,
-        ".method public static openOfferWall()V",
-        "    .locals 0\n    return-void",
-    )
-    with open(be_util_path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(be_smali)
-
-    # 5. Patch VideoAdManager.smali so all ad checks / lifecycle calls are safe no-ops
+    # -------------------------------------------------------------
+    # 8. Patch VideoAdManager.smali
+    # -------------------------------------------------------------
     video_mgr_path = os.path.join(
         DECOMPILED_DIR, "smali", "com", "droidhang", "game", "ad", "VideoAdManager.smali"
     )
@@ -296,7 +687,9 @@ def patch_smali_files():
     with open(video_mgr_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(video_smali)
 
-    # 6. Patch AndroidUtil.smali so getIMEI, getIMSI, getWIFI never crash on Android 13/14
+    # -------------------------------------------------------------
+    # 9. Patch AndroidUtil.smali
+    # -------------------------------------------------------------
     android_util_path = os.path.join(
         DECOMPILED_DIR, "smali", "com", "wwcd", "util", "AndroidUtil.smali"
     )

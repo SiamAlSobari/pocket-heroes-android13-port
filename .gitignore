@@ -4,6 +4,8 @@ pocket-heroes-decompiled/build/
 pocket-heroes-decompiled/dist/
 *.idsig
 *.keystore
+pocket-heroes-*-fixed.apk
+pocket-heroes-*-r*.apk
 __pycache__/
 .pytest_cache/
 .superpowers/

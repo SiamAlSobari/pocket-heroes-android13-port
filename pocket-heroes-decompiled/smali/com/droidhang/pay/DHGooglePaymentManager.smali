@@ -178,13 +178,6 @@
 
     .line 262
     :cond_0
-    iget-object v0, p0, Lcom/droidhang/pay/DHGooglePaymentManager;->mHelper:Lcom/droidhang/pay/util/IabHelper;
-
-    const-string v1, "supportPurchase false"
-
-    invoke-virtual {v0, v1}, Lcom/droidhang/pay/util/IabHelper;->logError(Ljava/lang/String;)V
-
-    .line 263
     invoke-virtual {p0}, Lcom/droidhang/pay/DHGooglePaymentManager;->alertBillingNotSupport()V
     :try_end_0
     .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
@@ -788,9 +781,15 @@
     .param p3, "data"    # Landroid/content/Intent;
 
     .prologue
-    .line 243
     iget-object v0, p0, Lcom/droidhang/pay/DHGooglePaymentManager;->mHelper:Lcom/droidhang/pay/util/IabHelper;
 
+    if-nez v0, :cond_0
+
+    const/4 v0, 0x0
+
+    return v0
+
+    :cond_0
     invoke-virtual {v0, p1, p2, p3}, Lcom/droidhang/pay/util/IabHelper;->handleActivityResult(IILandroid/content/Intent;)Z
 
     move-result v0

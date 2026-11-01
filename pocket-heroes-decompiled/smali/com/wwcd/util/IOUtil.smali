@@ -552,6 +552,13 @@
 
     move-result-object v1
 
+    if-nez v1, :cond_io_not_null
+
+    invoke-virtual {p0}, Ljava/io/File;->delete()Z
+
+    return-void
+
+    :cond_io_not_null
     .line 167
     .local v1, "files":[Ljava/io/File;
     array-length v3, v1

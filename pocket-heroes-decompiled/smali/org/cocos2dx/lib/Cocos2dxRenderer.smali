@@ -13,6 +13,8 @@
 
 .field private static sAnimationInterval:J
 
+.field public static sNativeInitDone:Z = false
+
 
 # instance fields
 .field private _ctx:Landroid/app/Activity;
@@ -37,6 +39,9 @@
     const-wide/32 v0, 0xfe502a
 
     sput-wide v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sAnimationInterval:J
+
+    const/4 v0, 0x0
+    sput-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
 
     return-void
 .end method
@@ -146,6 +151,9 @@
 
     invoke-static {p1, p2, v2, v3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeInit(IILandroid/content/Context;Landroid/opengl/GLSurfaceView;)V
 
+    const/4 v4, 0x1
+    sput-boolean v4, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
     .line 97
     return-void
 
@@ -201,58 +209,78 @@
 .end method
 
 .method public handleActionCancel([I[F[F)V
-    .locals 0
+    .locals 1
     .param p1, "pIDs"    # [I
     .param p2, "pXs"    # [F
     .param p3, "pYs"    # [F
 
     .prologue
-    .line 169
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
     invoke-static {p1, p2, p3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeTouchesCancel([I[F[F)V
 
-    .line 170
     return-void
 .end method
 
 .method public handleActionDown(IFF)V
-    .locals 0
+    .locals 1
     .param p1, "pID"    # I
     .param p2, "pX"    # F
     .param p3, "pY"    # F
 
     .prologue
-    .line 161
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
     invoke-static {p1, p2, p3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeTouchesBegin(IFF)V
 
-    .line 162
     return-void
 .end method
 
 .method public handleActionMove([I[F[F)V
-    .locals 0
+    .locals 1
     .param p1, "pIDs"    # [I
     .param p2, "pXs"    # [F
     .param p3, "pYs"    # [F
 
     .prologue
-    .line 173
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
     invoke-static {p1, p2, p3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeTouchesMove([I[F[F)V
 
-    .line 174
     return-void
 .end method
 
 .method public handleActionUp(IFF)V
-    .locals 0
+    .locals 1
     .param p1, "pID"    # I
     .param p2, "pX"    # F
     .param p3, "pY"    # F
 
     .prologue
-    .line 165
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
     invoke-static {p1, p2, p3}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeTouchesEnd(IFF)V
 
-    .line 166
     return-void
 .end method
 
@@ -280,36 +308,51 @@
 .end method
 
 .method public handleKeyDown(I)V
-    .locals 0
+    .locals 1
     .param p1, "pKeyCode"    # I
 
     .prologue
-    .line 177
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
     invoke-static {p1}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeKeyDown(I)Z
 
-    .line 178
     return-void
 .end method
 
 .method public handleOnPause()V
-    .locals 0
+    .locals 1
 
     .prologue
-    .line 181
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
     invoke-static {}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeOnPause()V
 
-    .line 182
     return-void
 .end method
 
 .method public handleOnResume()V
-    .locals 0
+    .locals 1
 
     .prologue
-    .line 185
+    sget-boolean v0, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+
+    if-nez v0, :cond_0
+
+    return-void
+
+    :cond_0
     invoke-static {}, Lorg/cocos2dx/lib/Cocos2dxRenderer;->nativeOnResume()V
 
-    .line 186
     return-void
 .end method
 
@@ -318,6 +361,10 @@
     .param p1, "gl"    # Ljavax/microedition/khronos/opengles/GL10;
 
     .prologue
+    sget-boolean v4, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sNativeInitDone:Z
+    if-nez v4, :cond_native_ready
+    return-void
+    :cond_native_ready
     .line 127
     sget-wide v4, Lorg/cocos2dx/lib/Cocos2dxRenderer;->sAnimationInterval:J
 
