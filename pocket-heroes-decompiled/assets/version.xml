@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<version interval="1200">
+    <android id="11">
+        <title_us>New version available!</title_us>
+        <title_cn>新版本更新</title_cn>
+        <title_ru>Новая версия доступна.</title_ru>
+        <title_sk>New version available!</title_sk>
+        
+        <desc_us>v1.0.9&#x0A;&#x0A;.Add Boss Rush, challenge players all over the world.&#x0A;.Back up or restore archives.&#x0A;.Revert cost to the cheap version.&#x0A;.Fix crash bug when login google+</desc_us>
+        <desc_cn>v1.0.9&#x0A;&#x0A;.增加世界Boss，挑战全球玩家！&#x0A;.备份、恢复存档.&#x0A;.数值调整，恢复到v1.0.4&#x0A;.修复崩溃错误.</desc_cn>
+        <desc_ru>v1.0.9&#x0A;&#x0A;.Add Boss Rush, challenge players all over the world.&#x0A;.Back up or restore archives.&#x0A;.Revert cost to the cheap version.&#x0A;.Fix crash bug when login google+.</desc_ru>
+        <desc_sk>v1.0.9&#x0A;&#x0A;.Add Boss Rush, challenge players all over the world.&#x0A;.Back up or restore archives.&#x0A;.Revert cost to the cheap version.&#x0A;.Fix crash bug when login google+.</desc_sk>
+    </android>
+    <ios id="11">
+        <title_us>update</title_us>
+        <title_cn>更新</title_cn>
+        <title_ru>test_ru</title_ru>
+        
+        <desc_us>update_desc</desc_us>
+        <desc_cn>更新内容</desc_cn>
+        <desc_ru>test_33</desc_ru>
+    </ios>
+</version>

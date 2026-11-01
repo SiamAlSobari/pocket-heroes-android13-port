@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<discount interval="2400" offset="300">
+    <item>
+        <safetyLevel>0</safetyLevel>
+        <start>1440403200</start>
+        <duration>345600</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url></url>
+        <md5></md5>
+        
+        <cashValue>
+            <us sign="$">
+                <unlockHero9>3.49</unlockHero9>
+                <crystalPrice0 dataID="1">1.49</crystalPrice0>
+                <coinPrice5 dataID="2">9.99</coinPrice5>
+            </us>
+        </cashValue>
+    </item>
+    
+    <!-- 充值5元，送装备礼包 -->
+    <item goType="19">
+        <safetyLevel>0</safetyLevel>
+        <start>1440403200</start>
+        <duration>345600</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url>http://linkfiles.droidhang.com/others/workdays/week_1.png</url>
+        <md5>a20389a9f62ca165af263ffb2b01e440</md5>
+        
+        <asPayValue>
+            <i pid="40" dataID="1">
+                <bonus type="5">17530</bonus>
+                <bonus type="5">18578</bonus>
+                <bonus type="5">19578</bonus>
+                <bonus type="5">20602</bonus>
+            </i>
+        </asPayValue>
+    </item>
+    
+    <!-- 充值8元，送装备礼包 -->
+    <item goType="20">
+        <safetyLevel>0</safetyLevel>
+        <start>1440403200</start>
+        <duration>345600</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url>http://linkfiles.droidhang.com/others/workdays/week_2.png</url>
+        <md5>5ddd10ccf4d9b8f722ac15235f01bd61</md5>
+        
+        <asPayValue>
+            <i pid="41" dataID="2">
+                <bonus type="5">17651</bonus>
+                <bonus type="5">18691</bonus>
+                <bonus type="5">19699</bonus>
+                <bonus type="5">20683</bonus>
+            </i>
+        </asPayValue>
+    </item>
+    
+    <!-- 充值10元，送装备礼包 -->
+    <item goType="21">
+        <safetyLevel>0</safetyLevel>
+        <start>1440403200</start>
+        <duration>345600</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url>http://linkfiles.droidhang.com/others/workdays/week_3.png</url>
+        <md5>b21706dacaae06d6e6955162453f9a14</md5>
+        
+        <asPayValue>
+            <i pid="42" dataID="2">
+                <bonus type="5">17812</bonus>
+                <bonus type="5">18860</bonus>
+                <bonus type="5">19820</bonus>
+                <bonus type="5">20844</bonus>
+            </i>
+        </asPayValue>
+    </item>
+</discount>

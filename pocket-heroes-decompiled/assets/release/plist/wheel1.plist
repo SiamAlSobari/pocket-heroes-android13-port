@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>frames</key>
+        <dict>
+            <key>UI/gap.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,2},{454,454}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{454,454}}</string>
+                <key>sourceSize</key>
+                <string>{454,454}</string>
+            </dict>
+        </dict>
+        <key>metadata</key>
+        <dict>
+            <key>format</key>
+            <integer>2</integer>
+            <key>realTextureFileName</key>
+            <string>wheel1.png</string>
+            <key>size</key>
+            <string>{458,458}</string>
+            <key>smartupdate</key>
+            <string>$TexturePacker:SmartUpdate:39a6d4681d1a3d845f79e9257876284e:52484846d52cac25c6ee39b24a4b234c:4dea4f8f8b430642ee8ef8ee0c53343f$</string>
+            <key>textureFileName</key>
+            <string>wheel1.png</string>
+        </dict>
+    </dict>
+</plist>

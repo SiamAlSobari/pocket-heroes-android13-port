@@ -1,0 +1,9 @@
+# Build & Tooling artifacts
+tools/
+pocket-heroes-decompiled/build/
+pocket-heroes-decompiled/dist/
+*.idsig
+*.keystore
+__pycache__/
+.pytest_cache/
+.superpowers/

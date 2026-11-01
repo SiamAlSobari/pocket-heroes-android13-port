@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<discount interval="2400" offset="300">
+    <item>
+        <safetyLevel>0</safetyLevel>
+        <start>1393142400</start>
+        <duration>259200</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url></url>
+        <md5></md5>
+        
+        <cashValue>
+            <us sign="$">
+                <unlockHero7>1.49</unlockHero7>
+                <crystalPrice4 dataID="1">9.99</crystalPrice4>
+                <coinPrice5 dataID="2">9.99</coinPrice5>
+            </us>
+        </cashValue>
+    </item>
+    
+    
+    <!-- 充值9.99元钻石，送高冷三件套 -->
+    <item goType="9">
+        <safetyLevel>0</safetyLevel>
+        <start>1393142400</start>
+        <duration>259200</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url>http://linkfiles.droidhang.com/ph_us/event_3_1.png</url>
+        <md5>c055d606507a7e027d1a85dd68a56777</md5>
+        
+        <asPayValue>
+            <i pid="19" dataID="0">
+                <bonus type="4">588258587</bonus>
+                <bonus type="4">589307163</bonus>
+                <bonus type="4">590355739</bonus>
+                <bonus type="2">20</bonus>
+            </i>
+        </asPayValue>
+    </item>
+    
+    <!--充值2.99元钻石，送33级橙装-->
+    <item goType="7">
+        <safetyLevel>0</safetyLevel>
+        <start>1393142400</start>
+        <duration>259200</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url>http://linkfiles.droidhang.com/ph_us/event_3_3.png</url>
+        <md5>da2d42780d6af69bb05916dc039fc140</md5>
+        
+        <asPayValue>
+            <i pid="17" dataID="0">
+                <bonus type="5">268</bonus>
+            </i>
+        </asPayValue>
+    </item>
+    
+    <!--  买金币钻石，多送20% -->
+    <item goType="13">
+        <safetyLevel>0</safetyLevel>
+        <start>1393142400</start>
+        <duration>259200</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url>http://linkfiles.droidhang.com/ph_us/event_2_1.png</url>
+        <md5>46609212b59d90c3b01be85721bf09f2</md5>
+        
+        <gameValue>
+            <coin0>3450</coin0>
+            <coin1>6095</coin1>
+            <coin2>13200</coin2>
+            <coin3>21000</coin3>
+            <coin4>30000</coin4>
+            <coin5>47500</coin5>
+            
+            <crystal0>115</crystal0>
+            <crystal1>207</crystal1>
+            <crystal2>456</crystal2>
+            <crystal3>720</crystal3>
+            <crystal4>1063</crystal4>
+            <crystal5>1688</crystal5>
+        </gameValue>
+    </item>
+    
+    
+    <!--  累计充值x元，送xxx -->
+    <item goType="13">
+        <safetyLevel>0</safetyLevel>
+        <start>0</start>
+        <duration>518400</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url>http://linkfiles.droidhang.com/ph_us/event_5_2.png</url>
+        <md5>cf5261f8e2d4ec5e2ff9c408601349bf</md5>
+        
+        <addUpValue dataID="0">
+            <i tot="3">
+                <bonus type="2">10</bonus>
+            </i>
+            <i tot="10">
+                <bonus type="2">20</bonus>
+            </i>
+            <i tot="20">
+                <bonus type="2">40</bonus>
+            </i>
+            <i tot="50">
+                <bonus type="2">120</bonus>
+            </i>
+        </addUpValue>
+    </item>
+    
+    <!-- 金蛋活动 -->
+    <item goType="7" >
+        <safetyLevel>0</safetyLevel>
+        <start>0</start>
+        <duration>0</duration>
+        <loop>0</loop>
+        <showTimeOffset>0</showTimeOffset>
+        <showDurationOffset>0</showDurationOffset>
+        <url></url>
+        <md5></md5>
+        
+        <asPayValue>
+            <i pid="17" dataID="0"> <!-- 加 disposable="1" 表示该活动不可重复     -->
+                <bonus type="2">10</bonus>
+            </i>
+        </asPayValue>
+        
+        <gameValue>
+            <wheel_dGold>2</wheel_dGold>
+            <wheel_dSilver>10</wheel_dSilver>
+            <wheel_dBronze>0</wheel_dBronze>
+        </gameValue>
+    </item>
+    
+</discount>
