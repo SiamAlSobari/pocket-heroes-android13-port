@@ -4,7 +4,7 @@
 
 
 # static fields
-.field private static final APP_DIR:Ljava/lang/String; = "com.hz.game.be"
+.field private static final APP_DIR:Ljava/lang/String; = "com.droidhang.ph"
 
 .field private static _gameActivity:Lcom/droidhang/ph/GameActivity;
 
@@ -133,7 +133,7 @@
 
     move-result-object v5
 
-    const-string v6, "com.hz.game.be"
+    const-string v6, "com.droidhang.ph"
 
     invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
@@ -160,7 +160,7 @@
     .line 277
     new-instance v4, Ljava/io/File;
 
-    const-string v5, "/data/data/com.hz.game.be/shared_prefs/Cocos2dxPrefsFile.xml"
+    const-string v5, "/data/data/com.droidhang.ph/shared_prefs/Cocos2dxPrefsFile.xml"
 
     invoke-direct {v4, v5}, Ljava/io/File;-><init>(Ljava/lang/String;)V
 
@@ -516,24 +516,8 @@
 
 .method public static isVideoAdAvailable()I
     .locals 1
-
-    .prologue
-    .line 311
-    invoke-static {}, Lcom/droidhang/game/ad/VideoAdManager;->isAdReady()Z
-
-    move-result v0
-
-    if-eqz v0, :cond_0
-
-    const/4 v0, 0x1
-
-    :goto_0
-    return v0
-
-    :cond_0
     const/4 v0, 0x0
-
-    goto :goto_0
+    return v0
 .end method
 
 .method public static loadPlayerCenteredScores(Ljava/lang/String;)V
@@ -667,76 +651,12 @@
 .end method
 
 .method public static openOfferWall()V
-    .locals 2
-
-    .prologue
-    .line 154
-    const-string v0, "be"
-
-    const-string v1, "openOfferWall"
-
-    invoke-static {v0, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 155
-    invoke-static {}, Lcom/tapjoy/TapjoyConnect;->getTapjoyConnectInstance()Lcom/tapjoy/TapjoyConnect;
-
-    move-result-object v0
-
-    if-eqz v0, :cond_0
-
-    .line 156
-    invoke-static {}, Lcom/tapjoy/TapjoyConnect;->getTapjoyConnectInstance()Lcom/tapjoy/TapjoyConnect;
-
-    move-result-object v0
-
-    invoke-virtual {v0}, Lcom/tapjoy/TapjoyConnect;->showOffers()V
-
-    .line 160
-    :goto_0
+    .locals 0
     return-void
-
-    .line 158
-    :cond_0
-    sget-object v0, Lcom/hz/game/be/util/BEUtil;->_gameActivity:Lcom/droidhang/ph/GameActivity;
-
-    const-string v1, "Tapjoy init error"
-
-    invoke-static {v0, v1}, Lcom/wwcd/util/ToastUtil;->alertShort(Landroid/app/Activity;Ljava/lang/String;)V
-
-    goto :goto_0
 .end method
 
 .method public static playVideoAd()V
-    .locals 3
-
-    .prologue
-    .line 315
-    const-string v0, "be"
-
-    new-instance v1, Ljava/lang/StringBuilder;
-
-    const-string v2, "isCachedAdAvailable="
-
-    invoke-direct {v1, v2}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
-
-    invoke-static {}, Lcom/droidhang/game/ad/VideoAdManager;->isAdReady()Z
-
-    move-result v2
-
-    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Z)Ljava/lang/StringBuilder;
-
-    move-result-object v1
-
-    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object v1
-
-    invoke-static {v0, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 316
-    invoke-static {}, Lcom/droidhang/game/ad/VideoAdManager;->playAd()V
-
-    .line 317
+    .locals 0
     return-void
 .end method
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto" package="com.droidhang.ph" platformBuildVersionCode="28" platformBuildVersionName="9">
+<?xml version="1.0" encoding="utf-8" standalone="no"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto" package="com.droidhang.ph" platformBuildVersionCode="33" platformBuildVersionName="13">
     <uses-feature android:glEsVersion="0x00020000"/>
     <supports-screens android:anyDensity="true" android:largeScreens="true" android:normalScreens="true" android:smallScreens="true" android:xlargeScreens="true"/>
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="com.android.vending.BILLING"/>
-    <application android:allowBackup="true" android:icon="@drawable/icon" android:label="@string/app_name" android:usesCleartextTraffic="true">
+    <application android:allowBackup="true" android:icon="@drawable/icon" android:label="@string/app_name" android:requestLegacyExternalStorage="true" android:usesCleartextTraffic="true">
         <uses-library android:name="org.apache.http.legacy" android:required="false"/>
         <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/app_name" android:name=".GameActivity" android:screenOrientation="landscape" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
             <intent-filter>
@@ -27,18 +27,18 @@
         <activity android:configChanges="keyboardHidden|orientation|screenSize" android:name="com.tapjoy.mraid.view.Browser"/>
         <activity android:configChanges="keyboardHidden|orientation|screenSize" android:name="com.vungle.publisher.FullScreenAdActivity" android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
         <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize" android:hardwareAccelerated="true" android:name="com.inmobi.androidsdk.IMBrowserActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
-        <receiver android:enabled="true" android:exported="true" android:name="com.inmobi.commons.analytics.androidsdk.IMAdTrackerReceiver">
+        <receiver android:enabled="false" android:exported="false" android:name="com.inmobi.commons.analytics.androidsdk.IMAdTrackerReceiver">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
                 <action android:name="com.inmobi.share.id"/>
             </intent-filter>
         </receiver>
-        <service android:enabled="true" android:name="com.inmobi.commons.internal.ActivityRecognitionManager"/>
-        <service android:exported="false" android:name="com.vungle.publisher.VungleService"/>
+        <service android:enabled="false" android:exported="false" android:name="com.inmobi.commons.internal.ActivityRecognitionManager"/>
+        <service android:enabled="false" android:exported="false" android:name="com.vungle.publisher.VungleService"/>
         <meta-data android:name="applovin.sdk.key" android:value="fHfKUd1ceND_Rl8PeWzFGKBb6g-QebXJtCdMqf-T1BSTxbtZ6rpMA_zHgxhJWDcOPFlEvkhxv9OqlGOs6BDGBA"/>
         <activity android:name="com.applovin.adview.AppLovinInterstitialActivity"/>
         <activity android:name="com.applovin.adview.AppLovinConfirmationActivity"/>
-        <receiver android:exported="true" android:name="com.droidhang.referrer.DroidhangReceiver">
+        <receiver android:enabled="false" android:exported="false" android:name="com.droidhang.referrer.DroidhangReceiver">
             <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER"/>
             </intent-filter>
