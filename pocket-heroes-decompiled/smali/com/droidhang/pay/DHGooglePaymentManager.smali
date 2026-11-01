@@ -831,7 +831,8 @@
     invoke-virtual {v0}, Lcom/droidhang/util/net/DHSimpleHttpThread;->init()V
 
     .line 60
-    invoke-direct {p0}, Lcom/droidhang/pay/DHGooglePaymentManager;->initPurchase()V
+    const/4 v0, 0x0
+    iput-boolean v0, p0, Lcom/droidhang/pay/DHGooglePaymentManager;->supportPurchase:Z
 
     .line 61
     return-void

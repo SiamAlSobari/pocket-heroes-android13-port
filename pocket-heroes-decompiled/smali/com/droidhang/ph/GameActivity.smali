@@ -893,7 +893,7 @@
     invoke-static {p0}, Lcom/droidhang/featured/FeaturedGameUtil;->init(Landroid/app/Activity;)V
 
     .line 119
-    invoke-static {p0}, Lcom/umeng/analytics/MobclickAgent;->updateOnlineConfig(Landroid/content/Context;)V
+    # invoke-static {p0}, Lcom/umeng/analytics/MobclickAgent;->noop_updateOnlineConfig(Landroid/content/Context;)V
 
     .line 121
     iget-object v1, p0, Lcom/droidhang/ph/GameActivity;->mGLSurfaceView:Lorg/cocos2dx/lib/Cocos2dxGLSurfaceView;
@@ -903,14 +903,14 @@
     .line 124
     const-string v1, "com.hz.game.be"
 
-    invoke-static {p0, v1}, Lcom/hz/game/be/sns/DHFacebook;->printKeyHash(Landroid/app/Activity;Ljava/lang/String;)V
+    # invoke-static {p0, v1}, Lcom/hz/game/be/sns/DHFacebook;->noop_printKeyHash(Landroid/app/Activity;Ljava/lang/String;)V
 
     .line 126
     const-string v1, "03cbe54e-06f9-4074-8ed2-f01b483ec76a"
 
     const-string v2, "utVu8jSLcFrCVYIEMipT"
 
-    invoke-static {p0, v1, v2}, Lcom/tapjoy/TapjoyConnect;->requestTapjoyConnect(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Z
+    # invoke-static {p0, v1, v2}, Lcom/tapjoy/TapjoyConnect;->noop_requestTapjoyConnect(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Z
 
     .line 128
     const-string v1, "be"
@@ -1009,12 +1009,12 @@
     invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 
     .line 140
-    invoke-static {p0, p0, p0}, Lcom/droidhang/game/DHGames;->init(Landroid/app/Activity;Lcom/droidhang/game/ad/IAdId;Lcom/droidhang/game/ad/video/VideoAdCallback;)V
+    # invoke-static {p0, p0, p0}, Lcom/droidhang/game/DHGames;->noop_init(Landroid/app/Activity;Lcom/droidhang/game/ad/IAdId;Lcom/droidhang/game/ad/video/VideoAdCallback;)V
 
     .line 141
     iget-object v1, p0, Lcom/droidhang/ph/GameActivity;->_featureLayout:Landroid/widget/FrameLayout;
 
-    invoke-static {p0, v1}, Lcom/droidhang/crosspromotion/CrossPromotionUtil;->init(Landroid/app/Activity;Landroid/widget/FrameLayout;)V
+    # invoke-static {p0, v1}, Lcom/droidhang/crosspromotion/CrossPromotionUtil;->noop_init(Landroid/app/Activity;Landroid/widget/FrameLayout;)V
 
     .line 142
     invoke-static {}, Lcom/droidhang/pay/DHGooglePaymentManager;->getInstance()Lcom/droidhang/pay/DHGooglePaymentManager;
@@ -1032,10 +1032,10 @@
     .line 144
     iget-object v1, p0, Lcom/droidhang/ph/GameActivity;->_admobLayout:Landroid/widget/RelativeLayout;
 
-    invoke-static {p0, v1}, Lcom/hz/game/be/util/AdMgr;->init(Landroid/app/Activity;Landroid/widget/RelativeLayout;)V
+    # invoke-static {p0, v1}, Lcom/hz/game/be/util/AdMgr;->noop_init(Landroid/app/Activity;Landroid/widget/RelativeLayout;)V
 
     .line 145
-    invoke-static {p0, v5, v5}, Lcom/hz/game/be/util/AdMgr;->enable(Landroid/app/Activity;II)V
+    # invoke-static {p0, v5, v5}, Lcom/hz/game/be/util/AdMgr;->noop_enable(Landroid/app/Activity;II)V
 
     .line 149
     return-void
@@ -1096,7 +1096,7 @@
     invoke-super {p0}, Lorg/cocos2dx/lib/Cocos2dxActivity;->onPause()V
 
     .line 233
-    invoke-static {}, Lcom/droidhang/game/ad/VideoAdManager;->onPause()V
+    # invoke-static {}, Lcom/droidhang/game/ad/VideoAdManager;->noop_onPause()V
 
     .line 234
     const-string v0, "be"
@@ -1117,7 +1117,7 @@
 
     move-result-object v0
 
-    invoke-virtual {v0}, Lcom/tapjoy/TapjoyConnect;->appPause()V
+    # invoke-virtual {v0}, Lcom/tapjoy/TapjoyConnect;->noop_appPause()V
 
     .line 239
     :cond_0
@@ -1132,7 +1132,7 @@
     invoke-super {p0}, Lorg/cocos2dx/lib/Cocos2dxActivity;->onResume()V
 
     .line 211
-    invoke-static {}, Lcom/droidhang/game/ad/VideoAdManager;->onResume()V
+    # invoke-static {}, Lcom/droidhang/game/ad/VideoAdManager;->noop_onResume()V
 
     .line 212
     invoke-static {}, Lcom/tapjoy/TapjoyConnect;->getTapjoyConnectInstance()Lcom/tapjoy/TapjoyConnect;
@@ -1146,14 +1146,14 @@
 
     move-result-object v1
 
-    invoke-virtual {v1, p0}, Lcom/tapjoy/TapjoyConnect;->getTapPoints(Lcom/tapjoy/TapjoyNotifier;)V
+    # invoke-virtual {v1, p0}, Lcom/tapjoy/TapjoyConnect;->noop_getTapPoints(Lcom/tapjoy/TapjoyNotifier;)V
 
     .line 214
     invoke-static {}, Lcom/tapjoy/TapjoyConnect;->getTapjoyConnectInstance()Lcom/tapjoy/TapjoyConnect;
 
     move-result-object v1
 
-    invoke-virtual {v1}, Lcom/tapjoy/TapjoyConnect;->appResume()V
+    # invoke-virtual {v1}, Lcom/tapjoy/TapjoyConnect;->noop_appResume()V
 
     .line 217
     :cond_0
@@ -1171,7 +1171,7 @@
 
     const-string v3, ""
 
-    invoke-static {v1, v2, v3, p0}, Lcom/sponsorpay/SponsorPay;->start(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/app/Activity;)Ljava/lang/String;
+    # invoke-static {v1, v2, v3, p0}, Lcom/sponsorpay/SponsorPay;->noop_start(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/app/Activity;)Ljava/lang/String;
     :try_end_0
     .catch Ljava/lang/Throwable; {:try_start_0 .. :try_end_0} :catch_0
 

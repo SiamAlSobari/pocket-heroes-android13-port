@@ -162,7 +162,7 @@
     iput v2, p0, Lcom/google/example/games/basegameutils/GameHelper;->mRequestedClients:I
 
     .line 137
-    iput-boolean v3, p0, Lcom/google/example/games/basegameutils/GameHelper;->mConnectOnStart:Z
+    iput-boolean v2, p0, Lcom/google/example/games/basegameutils/GameHelper;->mConnectOnStart:Z
 
     .line 145
     iput-boolean v2, p0, Lcom/google/example/games/basegameutils/GameHelper;->mUserInitiatedSignIn:Z
@@ -174,7 +174,7 @@
     iput-object v1, p0, Lcom/google/example/games/basegameutils/GameHelper;->mSignInFailureReason:Lcom/google/example/games/basegameutils/GameHelper$SignInFailureReason;
 
     .line 154
-    iput-boolean v3, p0, Lcom/google/example/games/basegameutils/GameHelper;->mShowErrorDialogs:Z
+    iput-boolean v2, p0, Lcom/google/example/games/basegameutils/GameHelper;->mShowErrorDialogs:Z
 
     .line 157
     iput-boolean v2, p0, Lcom/google/example/games/basegameutils/GameHelper;->mDebugLog:Z
