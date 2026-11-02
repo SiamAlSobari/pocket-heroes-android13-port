@@ -8,7 +8,7 @@ REPO_ROOT = r"C:\Koding\rea\pocket"
 DECOMPILED_DIR = os.path.join(REPO_ROOT, "pocket-heroes-decompiled")
 TOOLS_DIR = os.path.join(REPO_ROOT, "tools")
 KEYSTORE_PATH = os.path.join(TOOLS_DIR, "release.keystore")
-OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r3.apk")
+OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r4.apk")
 KEYTOOL_EXE = r"C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe"
 SDK_BUILD_TOOLS = r"C:\Users\Colorful\AppData\Local\Android\Sdk\build-tools\36.1.0"
 AAPT2_EXE = os.path.join(SDK_BUILD_TOOLS, "aapt2.exe")
@@ -83,10 +83,11 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
             self.assertEqual(data[0x005B9DBC:0x005B9DC0], b"\x1e\xff\x2f\xe1")
             self.assertEqual(data[0x005B9D70:0x005B9D74], b"\x1e\xff\x2f\xe1")
             # Food / Stamina / Life Unlimited Patches
-            self.assertEqual(data[0x002BC4CC:0x002BC4D0], b"\x63\x20\x70\x47")
+            # LifeMax remains original (5 icons)
+            self.assertEqual(data[0x002BC4CC:0x002BC4D0], b"\x08\xb5\x9e\xf7")
             self.assertEqual(
-                data[0x002BC4E4:0x002BC4F8],
-                bytes.fromhex("10b5002801d063220260002901d000220a6010bd"),
+                data[0x002BC4E4:0x002BC4FE],
+                bytes.fromhex("30b5041c0d1cfff7efff002c01d02060002d02d000222a6030bd"),
             )
             self.assertEqual(data[0x002BC6DC:0x002BC6E0], b"\x01\x20\x70\x47")
             self.assertEqual(data[0x00310E26:0x00310E28], b"\x01\xe0")
@@ -209,10 +210,10 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
                     self.assertEqual(so_bytes[0x0035BBAC:0x0035BBAE], b"\x70\x47")
                     self.assertEqual(so_bytes[0x003614CC:0x003614CE], b"\x70\x47")
                     self.assertEqual(so_bytes[0x005B9C00:0x005B9C04], b"\x1e\xff\x2f\xe1")
-                    self.assertEqual(so_bytes[0x002BC4CC:0x002BC4D0], b"\x63\x20\x70\x47")
+                    self.assertEqual(so_bytes[0x002BC4CC:0x002BC4D0], b"\x08\xb5\x9e\xf7")
                     self.assertEqual(
-                        so_bytes[0x002BC4E4:0x002BC4F8],
-                        bytes.fromhex("10b5002801d063220260002901d000220a6010bd"),
+                        so_bytes[0x002BC4E4:0x002BC4FE],
+                        bytes.fromhex("30b5041c0d1cfff7efff002c01d02060002d02d000222a6030bd"),
                     )
                     self.assertEqual(so_bytes[0x002BC6DC:0x002BC6E0], b"\x01\x20\x70\x47")
                     self.assertEqual(so_bytes[0x00310E26:0x00310E28], b"\x01\xe0")

@@ -11,8 +11,8 @@ A compatibility port and startup crash fix for Pocket Heroes v2.0.5 (`com.droidh
 
 ## Downloads
 
-- Latest release: [Pocket Heroes v2.0.5 Release 3 (v2.0.5-r3)](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/tag/v2.0.5-r3)
-- Direct APK: [pocket-heroes-2-0-5-r3.apk](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/download/v2.0.5-r3/pocket-heroes-2-0-5-r3.apk)
+- Latest release: [Pocket Heroes v2.0.5 Release 4 (v2.0.5-r4)](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/tag/v2.0.5-r4)
+- Direct APK: [pocket-heroes-2-0-5-r4.apk](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/download/v2.0.5-r4/pocket-heroes-2-0-5-r4.apk)
 
 ---
 
@@ -90,7 +90,7 @@ The tests verify:
    ```bash
    python build_apk.py
    ```
-3. The signed APK is written to `pocket-heroes-2-0-5-r3.apk`.
+3. The signed APK is written to `pocket-heroes-2-0-5-r4.apk`.
 
 ---
 

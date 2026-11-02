@@ -19,7 +19,7 @@ APKSIGNER_BAT = os.path.join(SDK_BUILD_TOOLS, "apksigner.bat")
 UNSIGNED_APK = os.path.join(TOOLS_DIR, "unsigned.apk")
 ALIGNED_APK = os.path.join(TOOLS_DIR, "aligned.apk")
 KEYSTORE_PATH = os.path.join(TOOLS_DIR, "release.keystore")
-OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r3.apk")
+OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r4.apk")
 
 
 def ensure_keystore():
@@ -159,11 +159,10 @@ def patch_native_libs():
     so_data[0x005B9D70:0x005B9D74] = b"\x1e\xff\x2f\xe1"
 
     # 5. Food / Stamina / Life Unlimited Patches:
-    # 5a. LifeMax(void) at 0x002BC4CC -> movs r0, #99; bx lr (63 20 70 47) [Thumb]
-    so_data[0x002BC4CC:0x002BC4D0] = b"\x63\x20\x70\x47"
-    # 5b. BalanceLifeStatus(int*, int*) at 0x002BC4E4 -> sets *pCurLife = 99, *pRemainTime = 0
-    # 10 b5 00 28 01 d0 63 22 02 60 00 29 01 d0 00 22 0a 60 10 bd [Thumb]
-    so_data[0x002BC4E4:0x002BC4F8] = bytes.fromhex("10b5002801d063220260002901d000220a6010bd")
+    # 5a. Keep LifeMax(void) at 0x002BC4CC original so the UI renders the normal clean 5 chicken leg icons (not 99 overflowing the screen).
+    # 5b. BalanceLifeStatus(int*, int*) at 0x002BC4E4 -> dynamically calls LifeMax() and sets *pCurLife = LifeMax(), *pRemainTime = 0
+    # 30 b5 04 1c 0d 1c ff f7 ef ff 00 2c 01 d0 20 60 00 2d 02 d0 00 22 2a 60 30 bd [Thumb]
+    so_data[0x002BC4E4:0x002BC4FE] = bytes.fromhex("30b5041c0d1cfff7efff002c01d02060002d02d000222a6030bd")
     # 5c. DecreaseLife(int) at 0x002BC6DC -> movs r0, #1; bx lr (01 20 70 47) [Thumb]
     so_data[0x002BC6DC:0x002BC6E0] = b"\x01\x20\x70\x47"
     # 5d. UIStoryLayer::onLevel at 0x00310E26 -> b 0x310e2c (01 e0) to skip DecreaseLife check [Thumb]
