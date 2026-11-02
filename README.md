@@ -11,8 +11,8 @@ A compatibility port and startup crash fix for Pocket Heroes v2.0.5 (`com.droidh
 
 ## Downloads
 
-- Latest release: [Pocket Heroes v2.0.5 Release 4 (v2.0.5-r4)](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/tag/v2.0.5-r4)
-- Direct APK: [pocket-heroes-2-0-5-r4.apk](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/download/v2.0.5-r4/pocket-heroes-2-0-5-r4.apk)
+- Latest release: [Pocket Heroes v2.0.5 Release 5 (v2.0.5-r5)](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/tag/v2.0.5-r5)
+- Direct APK: [pocket-heroes-2-0-5-r5.apk](https://github.com/SiamAlSobari/pocket-heroes-android13-port/releases/download/v2.0.5-r5/pocket-heroes-2-0-5-r5.apk)
 
 ---
 
@@ -51,7 +51,15 @@ Setting `targetSdkVersion` to 28 (Android 9) allows installation on Android 14 a
 The original game required 1 food point per stage, with a timer to regenerate points.
 - Patched `DecreaseLife(int)` in `libgame.so` to return `true` without deducting food.
 - Patched `UIStoryLayer::onLevel` to bypass food checks and skip the "Buy Food" popup.
-- Set `BalanceLifeStatus` and `LifeMax` to return 99/99 food and 0 remaining timer seconds.
+- Restored `LifeMax` to the original 5 icons to prevent screen-edge overflow, while `BalanceLifeStatus` keeps stamina full without deducting chicken leg icons.
+
+### Full hero roster unlocked
+All heroes are unlocked from the start so you can freely build your party:
+- Patched `UserDataManager::isHeroUnlock(int)` to return `true` for all heroes.
+- Added an in-place trampoline in `UserDataManager::getAllHeroTeamInfo` to populate the reserve roster with all 10 heroes in `UITeamLayer`.
+- Neutralized lock icon overlays in `UITeamLayer::showLocks`.
+- Made Tavern hiring in `PriceManager::payUnlockHero` and `UIHireHeroLayer::popUnlockHeroYes` cost 0 gold and 0 crystals.
+- Preserved RPG progression: hero levels begin at Level 1 with starter gear, leaving leveling, grinding, and economy balance intact.
 
 ---
 
@@ -90,7 +98,7 @@ The tests verify:
    ```bash
    python build_apk.py
    ```
-3. The signed APK is written to `pocket-heroes-2-0-5-r4.apk`.
+3. The signed APK is written to `pocket-heroes-2-0-5-r5.apk`.
 
 ---
 

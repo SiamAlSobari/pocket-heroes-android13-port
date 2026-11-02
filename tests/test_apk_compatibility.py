@@ -8,7 +8,7 @@ REPO_ROOT = r"C:\Koding\rea\pocket"
 DECOMPILED_DIR = os.path.join(REPO_ROOT, "pocket-heroes-decompiled")
 TOOLS_DIR = os.path.join(REPO_ROOT, "tools")
 KEYSTORE_PATH = os.path.join(TOOLS_DIR, "release.keystore")
-OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r4.apk")
+OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r5.apk")
 KEYTOOL_EXE = r"C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe"
 SDK_BUILD_TOOLS = r"C:\Users\Colorful\AppData\Local\Android\Sdk\build-tools\36.1.0"
 AAPT2_EXE = os.path.join(SDK_BUILD_TOOLS, "aapt2.exe")
@@ -93,6 +93,19 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
             self.assertEqual(data[0x00310E26:0x00310E28], b"\x01\xe0")
             self.assertEqual(data[0x00310F7A:0x00310F7C], b"\x57\xe7")
             self.assertEqual(data[0x003109A0:0x003109A2], b"\x70\x47")
+            # Hero Instant Roster Unlock Patches
+            self.assertEqual(data[0x0029FE48:0x0029FE4C], b"\x01\x20\x70\x47")
+            self.assertEqual(
+                data[0x0029FE50:0x0029FE50 + 30],
+                bytes.fromhex("7268002a04d11d60022252425a6002e0316819605a60636808336360e0e7"),
+            )
+            self.assertEqual(data[0x0029FE22:0x0029FE24], b"\x15\xe0")
+            self.assertEqual(data[0x0029F4A6:0x0029F4A8], b"\x00\xbf")
+            self.assertEqual(data[0x00319D14:0x00319D16], b"\x70\x47")
+            self.assertEqual(data[0x00284110:0x00284114], b"\x01\x20\x70\x47")
+            self.assertEqual(data[0x002F0F80:0x002F0F84], b"\x00\xbf\x00\xbf")
+            self.assertEqual(data[0x002F0FAC:0x002F0FB0], b"\x00\xbf\x00\xbf")
+            self.assertEqual(data[0x002F1040:0x002F1042], b"\x19\xe0")
             # Crucial: 0x6215b8 must preserve "com/wwcd/util/AndroidUtil"
             self.assertEqual(data[0x006215B8:0x006215B8 + 25], b"com/wwcd/util/AndroidUtil")
 
@@ -219,6 +232,19 @@ class TestPocketHeroesAndroid13Port(unittest.TestCase):
                     self.assertEqual(so_bytes[0x00310E26:0x00310E28], b"\x01\xe0")
                     self.assertEqual(so_bytes[0x00310F7A:0x00310F7C], b"\x57\xe7")
                     self.assertEqual(so_bytes[0x003109A0:0x003109A2], b"\x70\x47")
+                    # Hero Instant Roster Unlock Patches
+                    self.assertEqual(so_bytes[0x0029FE48:0x0029FE4C], b"\x01\x20\x70\x47")
+                    self.assertEqual(
+                        so_bytes[0x0029FE50:0x0029FE50 + 30],
+                        bytes.fromhex("7268002a04d11d60022252425a6002e0316819605a60636808336360e0e7"),
+                    )
+                    self.assertEqual(so_bytes[0x0029FE22:0x0029FE24], b"\x15\xe0")
+                    self.assertEqual(so_bytes[0x0029F4A6:0x0029F4A8], b"\x00\xbf")
+                    self.assertEqual(so_bytes[0x00319D14:0x00319D16], b"\x70\x47")
+                    self.assertEqual(so_bytes[0x00284110:0x00284114], b"\x01\x20\x70\x47")
+                    self.assertEqual(so_bytes[0x002F0F80:0x002F0F84], b"\x00\xbf\x00\xbf")
+                    self.assertEqual(so_bytes[0x002F0FAC:0x002F0FB0], b"\x00\xbf\x00\xbf")
+                    self.assertEqual(so_bytes[0x002F1040:0x002F1042], b"\x19\xe0")
                     self.assertEqual(so_bytes[0x006215B8:0x006215B8 + 25], b"com/wwcd/util/AndroidUtil")
 
         # Verify with aapt2 dump badging

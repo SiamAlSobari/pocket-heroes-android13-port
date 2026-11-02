@@ -19,7 +19,7 @@ APKSIGNER_BAT = os.path.join(SDK_BUILD_TOOLS, "apksigner.bat")
 UNSIGNED_APK = os.path.join(TOOLS_DIR, "unsigned.apk")
 ALIGNED_APK = os.path.join(TOOLS_DIR, "aligned.apk")
 KEYSTORE_PATH = os.path.join(TOOLS_DIR, "release.keystore")
-OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r4.apk")
+OUTPUT_APK = os.path.join(REPO_ROOT, "pocket-heroes-2-0-5-r5.apk")
 
 
 def ensure_keystore():
@@ -171,6 +171,38 @@ def patch_native_libs():
     so_data[0x00310F7A:0x00310F7C] = b"\x57\xe7"
     # 5f. UIStoryLayer::onLife at 0x003109A0 -> bx lr (70 47) to ignore tapping food icon [Thumb]
     so_data[0x003109A0:0x003109A2] = b"\x70\x47"
+
+    # 6. Hero Instant Roster Unlock Patches (Option 1: Full Hero Roster Available by Default)
+    # 6a. UserDataManager::isHeroUnlock(int) at 0x0029FE48 -> movs r0, #1; bx lr (01 20 70 47) [Thumb]
+    so_data[0x0029FE48:0x0029FE4C] = b"\x01\x20\x70\x47"
+    so_data[0x0029FE4C:0x0029FE50] = b"\x00\xbf\x00\xbf"
+
+    # 6b. Trampoline at 0x0029FE50 (inside freed body of isHeroUnlock)
+    # Checks if state == 0 (locked): if so, writes heroIndex = loop r5, state = -2 (unlocked in reserve).
+    # If state != 0 (active in squad), writes existing heroIndex and state.
+    # 72 68 00 2a 04 d1 1d 60 02 22 52 42 5a 60 02 e0 31 68 19 60 5a 60 63 68 08 33 63 60 e0 e7
+    hero_trampoline = bytes.fromhex("7268002a04d11d60022252425a6002e0316819605a60636808336360e0e7")
+    so_data[0x0029FE50:0x0029FE50 + len(hero_trampoline)] = hero_trampoline
+
+    # 6c. UserDataManager::getAllHeroTeamInfo hook at 0x0029FE22 -> b 0x0029fe50 (15 e0) + NOPs [Thumb]
+    so_data[0x0029FE22:0x0029FE24] = b"\x15\xe0"
+    so_data[0x0029FE24:0x0029FE30] = b"\x00\xbf" * 6
+
+    # 6d. UserDataManager::getUnLockHeros at 0x0029F4A6 -> NOP out beq skip so all 10 heroes are in unlocked vector [Thumb]
+    so_data[0x0029F4A6:0x0029F4A8] = b"\x00\xbf"
+
+    # 6e. UITeamLayer::showLocks at 0x00319D14 -> bx lr (70 47) [Thumb]
+    so_data[0x00319D14:0x00319D16] = b"\x70\x47"
+
+    # 6f. PriceManager::payUnlockHero(int) at 0x00284110 -> movs r0, #1; bx lr (01 20 70 47) [Thumb]
+    so_data[0x00284110:0x00284114] = b"\x01\x20\x70\x47"
+
+    # 6g. UIHireHeroLayer::popUnlockHeroYes coin/crystal deduction bypass -> NOPs [Thumb]
+    so_data[0x002F0F80:0x002F0F84] = b"\x00\xbf\x00\xbf"
+    so_data[0x002F0FAC:0x002F0FB0] = b"\x00\xbf\x00\xbf"
+
+    # 6h. UIHireHeroLayer::onHire at 0x002F1040 -> b 0x002f1076 (19 e0) [Thumb]
+    so_data[0x002F1040:0x002F1042] = b"\x19\xe0"
 
     # CRITICAL: Verify offset 0x006215B8 is untouched and holds "com/wwcd/util/AndroidUtil"
     assert so_data[0x006215B8:0x006215B8 + 25] == b"com/wwcd/util/AndroidUtil"
